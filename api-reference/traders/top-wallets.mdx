@@ -1,0 +1,98 @@
+---
+title: "Top Wallets"
+description: "Top performing wallets leaderboard ranked by PnL."
+icon: "trophy"
+---
+
+# POST /traders/top-wallets
+
+Leaderboard of the highest-performing Solana wallets ranked by realized PnL over a given period. Useful for identifying alpha wallets to track and copy-trade.
+
+**Price:** $0.008 per request
+
+**Signal vocabulary:** `follow` | `ignore`
+
+**Sources:** Solana RPC
+
+---
+
+## Parameters
+
+<ParamField body="period" type="string" default="24h">
+  Time period for the leaderboard. Options: `24h`, `7d`.
+</ParamField>
+
+<ParamField body="limit" type="integer" default="20">
+  Maximum number of wallets to return (max 50).
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/traders/top-wallets \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"period": "24h", "limit": 10}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/traders/top-wallets?period=24h&limit=10" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "period": "24h",
+    "wallets": [
+      {
+        "address": "7pKm2...",
+        "pnl_usd": 45200,
+        "win_rate_pct": 82.1,
+        "trades": 23,
+        "best_token": "BONK",
+        "best_trade_pnl_usd": 18400
+      },
+      {
+        "address": "3vFq8...",
+        "pnl_usd": 31800,
+        "win_rate_pct": 76.5,
+        "trades": 41,
+        "best_token": "WIF",
+        "best_trade_pnl_usd": 9200
+      }
+    ],
+    "total_wallets_analyzed": 5000
+  },
+  "insight": "Top performer 7pKm2 made $45K in 23 trades — a sniper pattern with 82% hit rate. Notable that 3 of the top 10 wallets share similar entry timing, suggesting alpha group coordination.",
+  "signal": "follow",
+  "confidence": 0.83,
+  "sources": ["solana-rpc"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 1567,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Data Fields
+
+<Expandable title="Wallet leaderboard fields">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `address` | string | Wallet address |
+  | `pnl_usd` | number | Net realized PnL in USD for the period |
+  | `win_rate_pct` | number | Percentage of profitable trades |
+  | `trades` | number | Total trades in the period |
+  | `best_token` | string | Token with the highest single-trade profit |
+  | `best_trade_pnl_usd` | number | PnL of the best single trade |
+</Expandable>
