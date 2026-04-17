@@ -1,0 +1,100 @@
+---
+title: "Escrow Wallet"
+description: "Custodial wallet system for zero-friction DeFi queries in the Playground."
+icon: "wallet"
+---
+
+# Escrow Wallet
+
+The Playground uses a custodial wallet system so users can query HYRE endpoints without manual transaction signing. Deposit USDC once, and the agent spends micro-fees automatically.
+
+---
+
+## How It Works
+
+<Steps>
+  <Step title="Wallet provisioned on signup">
+    When a user signs in via Privy, the backend generates a new wallet keypair. The private key is encrypted with AES-256-GCM and stored in Cloudflare D1.
+  </Step>
+
+  <Step title="User deposits USDC">
+    The user sends USDC to their custodial wallet address. Three chains are supported:
+
+    | Chain | Gas | USDC Contract |
+    |-------|-----|---------------|
+    | Solana | SOL (~$0.0005) | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` |
+    | Base | ETH (~$0.01) | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
+    | SKALE | sFUEL (free) | `0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20` |
+  </Step>
+
+  <Step title="Balance tracked in real-time">
+    The backend monitors incoming transfers and updates the user's balance. The current balance is visible in the Playground sidebar.
+  </Step>
+
+  <Step title="Auto-deduction per query">
+    When the chat agent calls a HYRE endpoint, the backend deducts the endpoint price from the escrow balance before forwarding the request. No signing popups.
+  </Step>
+
+  <Step title="Withdraw anytime">
+    Users can withdraw their remaining USDC balance to any external wallet at any time via the Playground settings.
+  </Step>
+</Steps>
+
+---
+
+## Encryption
+
+| Property | Value |
+|----------|-------|
+| Algorithm | AES-256-GCM |
+| Key derivation | Per-user unique encryption key |
+| Storage | Cloudflare D1 (SQLite at edge) |
+| Access | Backend only (never exposed to client) |
+
+<Note>
+  The encryption key is derived from the user's Privy ID and a server-side secret. The private key cannot be reconstructed without both components.
+</Note>
+
+---
+
+## Balance Model
+
+The escrow system uses an optimistic balance model:
+
+1. **Check** -- Before calling a HYRE endpoint, verify the user has sufficient balance.
+2. **Deduct** -- Subtract the endpoint price from the in-memory balance.
+3. **Call** -- Forward the request to the HYRE API with an internal auth header (bypasses x402).
+4. **Confirm** -- On success, persist the deduction. On failure, refund the balance.
+
+This ensures users are never charged for failed requests.
+
+---
+
+## Supported Chains
+
+<AccordionGroup>
+  <Accordion title="Solana">
+    - Gas token: SOL
+    - Gas cost: ~$0.0005 per transaction
+    - USDC: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
+    - Settlement: ~400ms
+    - Facilitator: Dexter (`x402.dexter.cash`)
+  </Accordion>
+
+  <Accordion title="Base">
+    - Gas token: ETH
+    - Gas cost: ~$0.01 per transaction
+    - USDC: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+    - Settlement: ~2s
+    - Facilitator: PayAI (`facilitator.payai.network`)
+  </Accordion>
+
+  <Accordion title="SKALE">
+    - Gas token: sFUEL (free)
+    - Gas cost: Zero
+    - USDC: `0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20` (bridged)
+    - Settlement: ~1s
+    - Facilitator: PayAI (`facilitator.payai.network`)
+    - Best for: cost-sensitive agents and high-frequency queries
+  </Accordion>
+</AccordionGroup>
