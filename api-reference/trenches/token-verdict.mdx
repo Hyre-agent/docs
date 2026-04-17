@@ -1,0 +1,105 @@
+---
+title: "Token Verdict"
+description: "Full AI verdict combining holders, snipers, dev history, and bonding curve data."
+icon: "gavel"
+---
+
+# POST /trenches/token-verdict
+
+Comprehensive risk assessment for any PumpFun token. Combines data from multiple sources -- holder distribution, sniper detection, dev wallet history, bonding curve progress, and metadata -- into a single AI verdict.
+
+This is the most thorough token analysis endpoint, combining the data from `/trenches/token`, `/trenches/token-snipers`, and `/trenches/curve` into one call.
+
+**Price:** $0.015 per request
+
+**Signal vocabulary:** `snipe` | `watch` | `avoid`
+
+**Sources:** Solana RPC, PumpPortal
+
+---
+
+## Parameters
+
+<ParamField body="mint" type="string" required>
+  Solana token mint address.
+</ParamField>
+
+<ParamField body="curve_key" type="string">
+  Bonding curve account address. Optional -- if omitted, the API attempts to derive it from the mint.
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/trenches/token-verdict \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"mint": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/trenches/token/7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU/verdict" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "token": {
+      "mint": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+      "name": "ExampleToken",
+      "symbol": "EXT",
+      "holders": 847,
+      "top_holders_pct": 34.2,
+      "dev_wallet": "vhu9Nc7E...",
+      "dev_holds_pct": 8.1,
+      "freeze_authority": null,
+      "mint_authority": null
+    },
+    "snipers": {
+      "count": 3,
+      "total_pct": 12.4,
+      "risk_level": "medium"
+    },
+    "curve": {
+      "progress_pct": 72.3,
+      "sol_in_curve": 234.5,
+      "estimated_graduation_hours": 4.2
+    }
+  },
+  "insight": "EXT shows medium risk. 3 sniper wallets hold 12.4% — not catastrophic but worth monitoring. Dev wallet retains 8.1% with no freeze/mint authority. Bonding curve at 72% suggests graduation in ~4 hours. Top 5 holders concentrated at 34%.",
+  "signal": "watch",
+  "confidence": 0.79,
+  "sources": ["solana-rpc", "pumpportal"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 1847,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Verdict Components
+
+The AI considers these factors when generating the verdict:
+
+| Factor | Weight | Description |
+|--------|--------|-------------|
+| Sniper concentration | High | Wallets that bought in the first 3 blocks |
+| Dev wallet holdings | High | Percentage of supply held by creator |
+| Freeze/mint authority | Critical | Whether the dev can freeze accounts or mint more tokens |
+| Top holder concentration | Medium | How much the top 5 wallets control |
+| Bonding curve progress | Medium | How close the token is to graduation |
+| Holder count | Low | More holders generally means more organic interest |
+
+<Warning>
+  This endpoint makes multiple RPC calls and is the slowest in the Trenches segment (~1-2s latency). For faster but narrower analysis, use the individual endpoints (`/trenches/token`, `/trenches/token-snipers`, `/trenches/curve`).
+</Warning>
