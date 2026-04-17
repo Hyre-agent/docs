@@ -1,0 +1,92 @@
+---
+title: "Supported Chains"
+description: "HYRE accepts USDC payments on Solana, Base, and SKALE."
+icon: "link"
+---
+
+# Supported Chains
+
+HYRE accepts x402 payments on three chains. All chains return identical API data -- the only difference is the payment network and gas cost.
+
+---
+
+## Chain Comparison
+
+| | Solana | Base | SKALE |
+|---|--------|------|-------|
+| **Network ID** | `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` | `eip155:8453` | `eip155:1187947933` |
+| **Gas token** | SOL | ETH | sFUEL |
+| **Gas cost** | ~$0.0005 (sponsored) | ~$0.01 | Free |
+| **USDC contract** | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` | `0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20` |
+| **Pay-to address** | `7G73PLhKvAPBGTzG5ESAE4coE7QrVeTTKfhTxQZbyGgC` | `0xb5998e11E666Fd1e7f3B8e8d9122A755eec1E9b7` | `0xb5998e11E666Fd1e7f3B8e8d9122A755eec1E9b7` |
+| **Facilitator** | Dexter | PayAI | PayAI |
+| **Facilitator URL** | `https://x402.dexter.cash` | `https://facilitator.payai.network` | `https://facilitator.payai.network` |
+| **Settlement time** | ~400ms | ~2s | ~1s |
+| **API prefix** | `/` (root) | `/base/` | `/skale/` |
+| **Explorer** | [Solscan](https://solscan.io) | [BaseScan](https://basescan.org) | [SKALE Explorer](https://elated-tan-skat.explorer.mainnet.skalenodes.com) |
+
+---
+
+## Solana (Recommended)
+
+Solana is the primary payment chain for HYRE. Gas fees are sponsored by the HYRE fee payer, so callers pay only the endpoint price in USDC.
+
+- **Facilitator:** Dexter (`x402.dexter.cash`)
+- **Payment format:** Solana transaction with USDC transfer
+- **URL prefix:** Root paths (`/trenches/new-tokens`, `/defi/tvl`, etc.)
+
+```bash
+curl -X POST https://mpp.hyreagent.fun/defi/tvl \
+  -H "X-PAYMENT: <solana-payment>" \
+  -H "Content-Type: application/json" \
+  -d '{"chain": "solana"}'
+```
+
+---
+
+## Base
+
+Base (Coinbase L2) offers low gas fees and wide EVM wallet compatibility.
+
+- **Facilitator:** PayAI (`facilitator.payai.network`)
+- **Payment format:** EIP-3009 TransferWithAuthorization (EIP-712 signed)
+- **URL prefix:** `/base/` prefix
+
+```bash
+curl -X POST https://mpp.hyreagent.fun/base/defi/tvl \
+  -H "X-PAYMENT: <base-payment>" \
+  -H "Content-Type: application/json" \
+  -d '{"chain": "solana"}'
+```
+
+---
+
+## SKALE
+
+SKALE offers zero gas fees through its sFUEL mechanism. Ideal for cost-sensitive agents and high-frequency queries.
+
+- **Facilitator:** PayAI (`facilitator.payai.network`)
+- **Payment format:** EIP-3009 TransferWithAuthorization (EIP-712 signed)
+- **URL prefix:** `/skale/` prefix
+- **Chain name:** SKALE Europa (chain ID: 1187947933)
+
+```bash
+curl -X POST https://mpp.hyreagent.fun/skale/defi/tvl \
+  -H "X-PAYMENT: <skale-payment>" \
+  -H "Content-Type: application/json" \
+  -d '{"chain": "solana"}'
+```
+
+<Info>
+  SKALE USDC is bridged from Ethereum mainnet via the SKALE Bridge. The USDC contract on SKALE is `0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20`.
+</Info>
+
+---
+
+## RPC Endpoints
+
+| Chain | RPC URL |
+|-------|---------|
+| Solana | Use any Solana RPC (e.g., Helius, Alchemy, QuickNode) |
+| Base | `https://mainnet.base.org` |
+| SKALE | `https://mainnet.skalenodes.com/v1/elated-tan-skat` |
