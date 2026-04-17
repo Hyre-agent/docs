@@ -1,0 +1,90 @@
+---
+title: "New Tokens"
+description: "Real-time PumpFun token launches with AI snipe signal."
+icon: "sparkles"
+---
+
+# POST /trenches/new-tokens
+
+Fetches the latest PumpFun token launches from the PumpPortal Durable Object cache. Each token includes metadata, dev wallet, bonding curve key, and an AI-generated snipe/watch/avoid signal.
+
+**Price:** $0.008 per request
+
+**Signal vocabulary:** `snipe` | `watch` | `avoid`
+
+**Sources:** PumpPortal
+
+---
+
+## Parameters
+
+<ParamField body="limit" type="integer" default="10">
+  Maximum number of tokens to return (max 100).
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/trenches/new-tokens \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"limit": 5}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/trenches/new-tokens?limit=5" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "tokens": [
+      {
+        "mint": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+        "name": "ExampleToken",
+        "symbol": "EXT",
+        "platform": "pumpfun",
+        "initial_buy_sol": 1.5,
+        "market_cap_sol": 42.3,
+        "created_at": "2026-04-17T10:25:00.000Z",
+        "bonding_curve_key": "BcYvE8s...",
+        "dev_wallet": "vhu9Nc7E..."
+      }
+    ]
+  },
+  "insight": "3 of 5 recent launches show insider bundling patterns. EXT has the cleanest launch — solo dev, no sniper wallets in first 3 blocks.",
+  "signal": "watch",
+  "confidence": 0.74,
+  "sources": ["pumpportal"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 289,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Data Fields
+
+<Expandable title="Token object fields">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `mint` | string | Solana token mint address |
+  | `name` | string | Token name |
+  | `symbol` | string | Token ticker symbol |
+  | `platform` | string | Launch platform (always `pumpfun`) |
+  | `initial_buy_sol` | number | Dev's initial buy in SOL |
+  | `market_cap_sol` | number | Current market cap in SOL |
+  | `created_at` | string | ISO 8601 creation timestamp |
+  | `bonding_curve_key` | string | Bonding curve account address |
+  | `dev_wallet` | string | Creator's wallet address |
+</Expandable>
