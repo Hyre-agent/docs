@@ -1,0 +1,156 @@
+---
+title: "Quickstart"
+description: "Make your first paid API call in under 2 minutes."
+icon: "bolt"
+---
+
+# Quickstart
+
+HYRE has two access paths: **direct x402 payment** for agents and scripts, or the **Agent Playground** for interactive chat.
+
+---
+
+## Option A: Direct x402 (for agents)
+
+<Steps>
+  <Step title="Get USDC on your preferred chain">
+    HYRE accepts USDC on three chains:
+
+    | Chain | Gas Token | Gas Cost | USDC Contract |
+    |-------|----------|----------|---------------|
+    | **Solana** | SOL | ~$0.0005 | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` |
+    | **Base** | ETH | ~$0.01 | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
+    | **SKALE** | sFUEL | Free | `0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20` |
+
+    For zero gas fees, use SKALE. For the fastest settlement, use Solana.
+  </Step>
+
+  <Step title="Make an unauthenticated request to get the 402 challenge">
+    Call any endpoint without a payment header. The server returns HTTP 402 with payment requirements.
+
+    ```bash
+    curl -s https://mpp.hyreagent.fun/defi/tvl | jq
+    ```
+
+    ```json
+    {
+      "x402Version": 1,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "solana",
+          "maxAmountRequired": "1000",
+          "resource": "https://mpp.hyreagent.fun/defi/tvl",
+          "payTo": "7G73PLhKvAPBGTzG5ESAE4coE7QrVeTTKfhTxQZbyGgC",
+          "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        }
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Sign the payment and attach the header">
+    Use your x402-compatible client to sign the payment and attach the `X-PAYMENT` header.
+
+    <CodeGroup>
+    ```bash curl (with pre-signed header)
+    curl -X POST https://mpp.hyreagent.fun/defi/tvl \
+      -H "Content-Type: application/json" \
+      -H "X-PAYMENT: <base64-encoded-payment>" \
+      -d '{"chain": "solana", "limit": 10}'
+    ```
+
+    ```typescript x402 SDK (Solana)
+    import { createX402Client } from "x402-client";
+
+    const client = createX402Client({
+      network: "solana",
+      wallet: yourSolanaWallet,
+      facilitator: "https://x402.dexter.cash",
+    });
+
+    const response = await client.fetch(
+      "https://mpp.hyreagent.fun/defi/tvl",
+      { method: "POST", body: JSON.stringify({ chain: "solana" }) }
+    );
+    ```
+
+    ```python AgentCash (Python)
+    # AgentCash handles x402 payment automatically
+    import requests
+
+    response = requests.post(
+        "https://mpp.hyreagent.fun/defi/tvl",
+        json={"chain": "solana", "limit": 10},
+        headers={"X-PAYMENT": agentcash.sign_payment()}
+    )
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Receive AI-enriched response">
+    The response includes raw data, an AI insight, a signal, and a confidence score.
+
+    ```json
+    {
+      "data": {
+        "chains": [
+          { "name": "Ethereum", "tvl_usd": 62800000000 },
+          { "name": "Solana", "tvl_usd": 12400000000 }
+        ],
+        "total_tvl_usd": 182400000000
+      },
+      "insight": "Solana TVL surged 12% week-over-week, driven by memecoin speculation and Meteora LP inflows. Ethereum dominance declined to 34%.",
+      "signal": "high_yield",
+      "confidence": 0.87,
+      "sources": ["defillama"],
+      "model_used": "deepseek-v3.2",
+      "latency_ms": 342,
+      "timestamp": "2026-04-17T10:30:00.000Z"
+    }
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Option B: Agent Playground (for humans)
+
+The Playground at [hyreagent.fun/chat](https://hyreagent.fun/chat) provides a chat interface where an AI agent calls HYRE endpoints on your behalf.
+
+<Steps>
+  <Step title="Sign up with Privy">
+    Email, Google, or social login. No wallet needed -- Privy provisions a custodial wallet automatically.
+  </Step>
+
+  <Step title="Deposit USDC">
+    Send USDC to your custodial wallet address (Solana, Base, or SKALE). The balance appears in real-time.
+  </Step>
+
+  <Step title="Chat">
+    Ask questions in plain English:
+    - *"What are the top yielding Meteora pools right now?"*
+    - *"Give me a full verdict on token So11111..."*
+    - *"Which wallets are accumulating this token?"*
+
+    The agent picks the right tool, pays the micro-fee from your escrow balance, and returns the result inline.
+  </Step>
+</Steps>
+
+---
+
+## Chain Routing
+
+Each chain has its own URL prefix:
+
+| Chain | Prefix | Example |
+|-------|--------|---------|
+| Solana | `/` (root) | `https://mpp.hyreagent.fun/defi/tvl` |
+| Base | `/base/` | `https://mpp.hyreagent.fun/base/defi/tvl` |
+| SKALE | `/skale/` | `https://mpp.hyreagent.fun/skale/defi/tvl` |
+
+All chains return identical data. The only difference is which payment network settles the transaction.
+
+<Warning>
+  Root paths (`/`) accept **Solana payments only**. For Base or SKALE, you must use the chain-prefixed paths (`/base/*` or `/skale/*`).
+</Warning>
