@@ -1,0 +1,102 @@
+---
+title: "Flow Intelligence"
+description: "Smart trader vs whale vs KOL net-flow for a token over configurable timeframes."
+icon: "arrows-left-right"
+---
+
+# POST /nansen/flow-intel
+
+Returns net-flow data for a specific token, broken down by smart money category: smart traders, whales, and KOLs (Key Opinion Leaders). Powered by Nansen's institutional-grade wallet labeling.
+
+**Price:** $0.020 per request
+
+**Signal vocabulary:** `accumulate` | `distribute` | `ignore`
+
+**Sources:** Nansen
+
+---
+
+## Parameters
+
+<ParamField body="chain" type="string" required>
+  Blockchain to query. Options: `ethereum`, `solana`, `base`, `arbitrum`.
+</ParamField>
+
+<ParamField body="token_address" type="string" required>
+  Token contract address on the specified chain.
+</ParamField>
+
+<ParamField body="timeframe" type="string" default="7d">
+  Analysis timeframe. Options: `5m`, `1h`, `6h`, `12h`, `1d`, `7d`.
+</ParamField>
+
+---
+
+## Example Request
+
+```bash
+curl -X POST https://mpp.hyreagent.fun/nansen/flow-intel \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{
+    "chain": "solana",
+    "token_address": "So11111111111111111111111111111111111111112",
+    "timeframe": "7d"
+  }'
+```
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "token": "So11111111111111111111111111111111111111112",
+    "chain": "solana",
+    "timeframe": "7d",
+    "flows": {
+      "smart_traders": {
+        "net_flow_usd": 2400000,
+        "buy_volume_usd": 5200000,
+        "sell_volume_usd": 2800000,
+        "unique_wallets": 34
+      },
+      "whales": {
+        "net_flow_usd": -800000,
+        "buy_volume_usd": 3100000,
+        "sell_volume_usd": 3900000,
+        "unique_wallets": 12
+      },
+      "kols": {
+        "net_flow_usd": 150000,
+        "buy_volume_usd": 320000,
+        "sell_volume_usd": 170000,
+        "unique_wallets": 8
+      }
+    },
+    "total_net_flow_usd": 1750000
+  },
+  "insight": "Smart traders are aggressively accumulating SOL with $2.4M net inflow over 7 days. Whales are slightly distributing (-$800K), but this is offset by broad-based smart money buying. KOL activity is neutral. Overall bullish setup.",
+  "signal": "accumulate",
+  "confidence": 0.85,
+  "sources": ["nansen"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 1234,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Flow Categories
+
+| Category | Description |
+|----------|-------------|
+| **Smart Traders** | Wallets with consistently profitable trading history, labeled by Nansen |
+| **Whales** | Large-balance wallets (typically >$1M in holdings) |
+| **KOLs** | Key Opinion Leaders — wallets linked to known crypto influencers |
+
+<Info>
+  Positive net flow indicates accumulation (more buying than selling). Negative net flow indicates distribution. The AI weighs smart trader flow more heavily than whale flow when generating the signal.
+</Info>
