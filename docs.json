@@ -1,0 +1,151 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "HYRE",
+  "description": "AI-powered DeFi intelligence API. Pay per query via x402 — no subscriptions.",
+  "logo": {
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg",
+    "href": "https://hyreagent.fun"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#BFFF00",
+    "light": "#BFFF00",
+    "dark": "#9ACC00"
+  },
+  "background": {
+    "decoration": "grid",
+    "color": {
+      "dark": "#0A0A0A",
+      "light": "#FAFAFA"
+    }
+  },
+  "appearance": {
+    "default": "dark",
+    "strict": false
+  },
+  "fonts": {
+    "heading": { "family": "JetBrains Mono", "weight": 700 },
+    "body": { "family": "Inter" }
+  },
+  "navbar": {
+    "links": [
+      { "label": "Website", "href": "https://hyreagent.fun" },
+      { "type": "github", "href": "https://github.com/pebfrks" }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Agent Playground",
+      "href": "https://hyreagent.fun/chat"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/AICryptoeight",
+      "github": "https://github.com/pebfrks",
+      "discord": "https://discord.gg/hyre"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "icon": "book",
+        "groups": ["Getting Started", "Agent Playground", "Payment", "Architecture"]
+      },
+      {
+        "tab": "API Reference",
+        "icon": "code",
+        "groups": ["Endpoints"]
+      }
+    ],
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": ["introduction", "quickstart", "pricing"]
+      },
+      {
+        "group": "Agent Playground",
+        "pages": [
+          "playground/overview",
+          "playground/privy-auth",
+          "playground/escrow-wallet",
+          "playground/chat-agent",
+          "playground/tool-execution"
+        ]
+      },
+      {
+        "group": "Payment",
+        "pages": [
+          "payment/x402-protocol",
+          "payment/supported-chains",
+          "payment/escrow-vs-onchain"
+        ]
+      },
+      {
+        "group": "Architecture",
+        "pages": [
+          "architecture/overview",
+          "architecture/llm-cascade",
+          "architecture/data-sources"
+        ]
+      },
+      {
+        "group": "Endpoints",
+        "pages": [
+          "api-reference/overview",
+          {
+            "group": "Trenches",
+            "pages": [
+              "api-reference/trenches/new-tokens",
+              "api-reference/trenches/token-verdict",
+              "api-reference/trenches/graduating"
+            ]
+          },
+          {
+            "group": "Traders",
+            "pages": [
+              "api-reference/traders/wallet-intel",
+              "api-reference/traders/top-wallets",
+              "api-reference/traders/token-whales"
+            ]
+          },
+          {
+            "group": "LP Analytics",
+            "pages": [
+              "api-reference/lp/pools",
+              "api-reference/lp/pools-recommend",
+              "api-reference/lp/pool-detail"
+            ]
+          },
+          {
+            "group": "DeFi",
+            "pages": [
+              "api-reference/defi/tvl",
+              "api-reference/defi/yields"
+            ]
+          },
+          {
+            "group": "Smart Money",
+            "pages": [
+              "api-reference/nansen/flow-intel",
+              "api-reference/nansen/screener",
+              "api-reference/nansen/wallet-intel"
+            ]
+          },
+          "api-reference/ask"
+        ]
+      }
+    ]
+  },
+  "api": {
+    "openapi": "https://mpp.hyreagent.fun/openapi.json",
+    "playground": {
+      "display": "interactive"
+    }
+  },
+  "search": {
+    "prompt": "Search HYRE docs..."
+  }
+}
