@@ -1,0 +1,119 @@
+---
+title: "Yield Opportunities"
+description: "Top yield pools multi-chain sorted by APY with risk assessment."
+icon: "percent"
+---
+
+# POST /defi/yields
+
+Returns the top yield opportunities across all chains, powered by DeFiLlama yield data. Supports filtering by chain, stablecoin status, and minimum APY.
+
+**Price:** $0.002 per request
+
+**Signal vocabulary:** `high_yield` | `medium_yield` | `low_yield` | `risky`
+
+**Sources:** DeFiLlama
+
+---
+
+## Parameters
+
+<ParamField body="chain" type="string" default="all">
+  Chain filter. Use `all` for cross-chain results.
+</ParamField>
+
+<ParamField body="stablecoin" type="string">
+  Set to `true` to show only stablecoin pools.
+</ParamField>
+
+<ParamField body="min_apy" type="number">
+  Minimum APY percentage filter.
+</ParamField>
+
+<ParamField body="limit" type="integer" default="20">
+  Maximum number of pools to return (max 50).
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/defi/yields \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"chain": "solana", "stablecoin": "true", "min_apy": 5, "limit": 10}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/defi/yields?chain=solana&stablecoin=true&min_apy=5&limit=10" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "pools": [
+      {
+        "pool": "USDC-USDT",
+        "project": "Meteora",
+        "chain": "Solana",
+        "apy_pct": 24.5,
+        "tvl_usd": 8200000,
+        "stablecoin": true,
+        "il_risk": "none",
+        "reward_tokens": ["USDC"]
+      },
+      {
+        "pool": "USDC-DAI",
+        "project": "Marinade",
+        "chain": "Solana",
+        "apy_pct": 12.3,
+        "tvl_usd": 3400000,
+        "stablecoin": true,
+        "il_risk": "none",
+        "reward_tokens": ["MNDE"]
+      }
+    ],
+    "filter": {
+      "chain": "solana",
+      "stablecoin": true,
+      "min_apy": 5
+    }
+  },
+  "insight": "Top stablecoin yield on Solana is Meteora's USDC-USDT at 24.5% APY with $8.2M TVL — sustainable fee-based yield with zero IL risk. Marinade's USDC-DAI at 12.3% includes MNDE incentives which may decrease over time.",
+  "signal": "high_yield",
+  "confidence": 0.89,
+  "sources": ["defillama"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 567,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Data Fields
+
+<Expandable title="Yield pool fields">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `pool` | string | Pool name / token pair |
+  | `project` | string | Protocol name |
+  | `chain` | string | Chain where the pool operates |
+  | `apy_pct` | number | Annual Percentage Yield |
+  | `tvl_usd` | number | Total Value Locked in the pool |
+  | `stablecoin` | boolean | Whether the pool is stablecoin-only |
+  | `il_risk` | string | Impermanent loss risk level |
+  | `reward_tokens` | string[] | Tokens distributed as rewards |
+</Expandable>
+
+<Warning>
+  High APY pools (>100%) often rely on token emissions that decrease over time. The AI insight considers yield sustainability when generating the signal.
+</Warning>
