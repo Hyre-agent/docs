@@ -1,0 +1,112 @@
+---
+title: "Wallet Intelligence (Nansen)"
+description: "Deep wallet profile with PnL history, archetype, and recent smart trades."
+icon: "id-card"
+---
+
+# POST /nansen/wallet-intel
+
+Deep intelligence profile for any wallet on supported chains, powered by Nansen's wallet labels and trading data. Includes PnL summary, trader archetype classification, and recent smart trades.
+
+**Price:** $0.050 per request
+
+**Signal vocabulary:** `follow` | `ignore`
+
+**Sources:** Nansen
+
+---
+
+## Parameters
+
+<ParamField body="chain" type="string" required>
+  Blockchain to query. Options: `ethereum`, `solana`, `base`, `arbitrum`.
+</ParamField>
+
+<ParamField body="address" type="string" required>
+  Wallet address to profile.
+</ParamField>
+
+---
+
+## Example Request
+
+```bash
+curl -X POST https://mpp.hyreagent.fun/nansen/wallet-intel \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{
+    "chain": "solana",
+    "address": "vhu9Nc7EQi6dpvk9R6GyrDjgrgnR2oyfRAeeYVmQCAp"
+  }'
+```
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "address": "vhu9Nc7EQi6dpvk9R6GyrDjgrgnR2oyfRAeeYVmQCAp",
+    "chain": "solana",
+    "labels": ["Smart Money", "Early Adopter"],
+    "pnl_summary": {
+      "realized_pnl_usd": 142000,
+      "unrealized_pnl_usd": 28400,
+      "total_pnl_usd": 170400,
+      "win_rate_pct": 71.2,
+      "total_trades": 234
+    },
+    "archetype": "smart_degen",
+    "recent_smart_trades": [
+      {
+        "token": "BONK",
+        "action": "buy",
+        "amount_usd": 15000,
+        "timestamp": "2026-04-16T14:30:00.000Z",
+        "pnl_usd": 4200
+      }
+    ],
+    "portfolio_value_usd": 89000,
+    "active_since": "2024-03-15"
+  },
+  "insight": "Labeled 'Smart Money' by Nansen with $170K total PnL across 234 trades. 71% win rate with a smart degen archetype — takes high-conviction bets on meme coins. Recent BONK buy netted $4.2K. Portfolio at $89K. Active since March 2024.",
+  "signal": "follow",
+  "confidence": 0.90,
+  "sources": ["nansen"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 2345,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Nansen Labels
+
+Common Nansen wallet labels that may appear:
+
+| Label | Description |
+|-------|-------------|
+| Smart Money | Consistently profitable trading history |
+| Whale | Large-balance wallet (>$1M) |
+| Fund | Known investment fund or DAO treasury |
+| Early Adopter | Early activity in emerging protocols |
+| DEX Trader | High-frequency DEX trading activity |
+| NFT Trader | Significant NFT trading volume |
+
+---
+
+## Differences from /traders/wallet-intel
+
+| Feature | /traders/wallet-intel | /nansen/wallet-intel |
+|---------|----------------------|---------------------|
+| Data source | Solana RPC (raw) | Nansen (labeled) |
+| Chains | Solana only | Ethereum, Solana, Base, Arbitrum |
+| Labels | AI-generated archetype | Nansen-verified labels |
+| Price | $0.012 | $0.050 |
+| Best for | Quick Solana wallet check | Cross-chain, institutional-grade analysis |
+
+<Info>
+  The Nansen endpoint costs more because it queries Nansen's commercial API, which provides institutional-grade wallet labeling and classification. For Solana-only analysis at a lower price, use `/traders/wallet-intel`.
+</Info>
