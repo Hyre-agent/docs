@@ -1,0 +1,106 @@
+---
+title: "Wallet Intelligence"
+description: "30-day wallet intelligence profile with trader archetype and copy-worthiness score."
+icon: "user-secret"
+---
+
+# POST /traders/wallet-intel
+
+Deep intelligence profile for any Solana wallet. Analyzes 30 days of transaction history to determine the trader's archetype, win rate, specialty, and copy-worthiness. The most comprehensive wallet analysis endpoint.
+
+**Price:** $0.012 per request
+
+**Signal vocabulary:** `follow` | `ignore`
+
+**Sources:** Solana RPC, Jupiter
+
+---
+
+## Parameters
+
+<ParamField body="address" type="string" required>
+  Solana wallet address to profile.
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/traders/wallet-intel \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"address": "vhu9Nc7EQi6dpvk9R6GyrDjgrgnR2oyfRAeeYVmQCAp"}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/traders/wallet/vhu9Nc7EQi6dpvk9R6GyrDjgrgnR2oyfRAeeYVmQCAp/intel" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "address": "vhu9Nc7EQi6dpvk9R6GyrDjgrgnR2oyfRAeeYVmQCAp",
+    "period": "30d",
+    "archetype": "sniper",
+    "win_rate_pct": 73.2,
+    "total_trades": 142,
+    "avg_hold_hours": 4.2,
+    "net_pnl_usd": 12400,
+    "best_trade_pnl_usd": 3200,
+    "worst_trade_pnl_usd": -890,
+    "specialty": "meme_coins",
+    "copy_worthiness": 7.8,
+    "current_positions": 4,
+    "portfolio_value_usd": 28500
+  },
+  "insight": "This is a high-frequency sniper wallet with a 73% win rate on meme coins. Average hold time of 4.2 hours suggests a scalping strategy. Copy-worthiness score 7.8/10 — strong risk-adjusted returns with consistent execution.",
+  "signal": "follow",
+  "confidence": 0.88,
+  "sources": ["solana-rpc", "jupiter"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 2103,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Trader Archetypes
+
+The AI classifies wallets into these archetypes:
+
+| Archetype | Description |
+|-----------|-------------|
+| `sniper` | Buys tokens within minutes of launch, exits quickly |
+| `swing_trader` | Holds positions for hours to days |
+| `accumulator` | Gradually builds large positions over time |
+| `whale` | Large capital, moves markets with single trades |
+| `degen` | High-frequency, high-risk meme coin trading |
+| `lp_farmer` | Primarily provides liquidity for yield |
+| `inactive` | Fewer than 5 trades in the analysis period |
+
+---
+
+## Copy-Worthiness Score
+
+The copy-worthiness score (0-10) factors in:
+
+| Factor | Weight |
+|--------|--------|
+| Win rate | 30% |
+| Risk-adjusted returns | 25% |
+| Consistency (low variance) | 20% |
+| Trade frequency | 15% |
+| Max drawdown | 10% |
+
+<Note>
+  A score above 7.0 is considered "follow-worthy". Scores below 4.0 suggest the wallet is not worth copying. The signal field reflects this threshold.
+</Note>
