@@ -1,0 +1,120 @@
+---
+title: "Token Screener"
+description: "Find tokens that smart money is actively accumulating across chains."
+icon: "filter"
+---
+
+# POST /nansen/token-screener
+
+Screens tokens across multiple chains to find those with significant smart money activity. Powered by Nansen's wallet labels and flow data.
+
+**Price:** $0.025 per request
+
+**Signal vocabulary:** `accumulate` | `distribute` | `ignore`
+
+**Sources:** Nansen
+
+---
+
+## Parameters
+
+<ParamField body="chains" type="string" default="solana">
+  Comma-separated chain list. Options: `ethereum`, `solana`, `base`, `arbitrum`.
+</ParamField>
+
+<ParamField body="only_smart_money" type="boolean" default={true}>
+  Only show tokens with smart money activity.
+</ParamField>
+
+<ParamField body="token_age_days" type="number">
+  Maximum token age in days. Useful for finding new tokens.
+</ParamField>
+
+<ParamField body="market_cap_min" type="number">
+  Minimum market cap in USD.
+</ParamField>
+
+<ParamField body="market_cap_max" type="number">
+  Maximum market cap in USD.
+</ParamField>
+
+<ParamField body="limit" type="integer" default="20">
+  Maximum number of tokens to return (max 50).
+</ParamField>
+
+---
+
+## Example Request
+
+```bash
+curl -X POST https://mpp.hyreagent.fun/nansen/token-screener \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{
+    "chains": "solana,base",
+    "only_smart_money": true,
+    "market_cap_min": 1000000,
+    "market_cap_max": 100000000,
+    "limit": 10
+  }'
+```
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "tokens": [
+      {
+        "symbol": "EXAMPLE",
+        "chain": "solana",
+        "address": "ExAm...",
+        "market_cap_usd": 24500000,
+        "price_usd": 0.245,
+        "smart_money_net_flow_7d_usd": 890000,
+        "smart_money_wallets": 12,
+        "whale_wallets": 4,
+        "token_age_days": 14
+      }
+    ],
+    "total_matches": 1,
+    "filters": {
+      "chains": ["solana", "base"],
+      "only_smart_money": true,
+      "market_cap_min": 1000000,
+      "market_cap_max": 100000000
+    }
+  },
+  "insight": "EXAMPLE on Solana stands out — 12 smart money wallets accumulated $890K in 7 days. Market cap at $24.5M with only 14 days of age. Early-stage accumulation pattern consistent with pre-narrative positioning.",
+  "signal": "accumulate",
+  "confidence": 0.82,
+  "sources": ["nansen"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 1678,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Data Fields
+
+<Expandable title="Screened token fields">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `symbol` | string | Token ticker symbol |
+  | `chain` | string | Blockchain where the token lives |
+  | `address` | string | Token contract address |
+  | `market_cap_usd` | number | Current market capitalization |
+  | `price_usd` | number | Current token price |
+  | `smart_money_net_flow_7d_usd` | number | Net smart money flow over 7 days |
+  | `smart_money_wallets` | number | Number of smart money wallets holding |
+  | `whale_wallets` | number | Number of whale wallets holding |
+  | `token_age_days` | number | Days since token creation |
+</Expandable>
+
+<Note>
+  The screener is most useful for mid-cap discovery ($1M-$100M market cap). For micro-caps, use the Trenches endpoints. For large-caps, the flow patterns are well-known and less alpha-generating.
+</Note>
