@@ -1,0 +1,90 @@
+---
+title: "Chat Agent"
+description: "How the Gemini-powered chat agent interprets questions and selects DeFi tools."
+icon: "robot"
+---
+
+# Chat Agent
+
+The Playground chat agent is powered by **Gemini 2.5 Flash-Lite** -- a fast, low-latency model optimized for tool selection and conversational DeFi analysis.
+
+---
+
+## Agent Capabilities
+
+The agent can:
+
+- **Auto-detect addresses** -- Paste a Solana token mint or wallet address and the agent identifies it and selects the right tool.
+- **Multi-tool orchestration** -- Complex questions may trigger multiple endpoint calls in sequence.
+- **Contextual follow-ups** -- The agent remembers conversation context for follow-up questions.
+- **Explain results** -- Raw data is summarized in natural language with actionable takeaways.
+
+---
+
+## Tool Proposal Cards
+
+Before executing a paid endpoint, the agent displays a **tool proposal card** showing:
+
+- The endpoint name and description
+- The price that will be deducted
+- The parameters that will be sent
+- An "Execute" button (or auto-execute if enabled)
+
+This gives users visibility into what the agent is doing and how much it costs before any payment occurs.
+
+---
+
+## Model Details
+
+| Property | Value |
+|----------|-------|
+| Model | Gemini 2.5 Flash-Lite |
+| Provider | Google AI |
+| Latency | ~200-500ms first token |
+| Context window | 1M tokens |
+| Streaming | Yes (SSE) |
+| JSON mode | Supported |
+| Cost | $0.10 / $0.40 per 1M tokens (input/output) |
+
+<Info>
+  The chat agent model (Gemini) is separate from the LLM cascade used to enrich API responses (DeepSeek, GLM, Claude). The chat agent handles conversation flow and tool selection. The cascade handles data interpretation.
+</Info>
+
+---
+
+## Example Conversations
+
+<AccordionGroup>
+  <Accordion title="Token research">
+    **User:** What's the verdict on 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU?
+
+    **Agent:** I'll run a full token verdict analysis on this mint address.
+    *[Calls POST /trenches/token-verdict with mint parameter]*
+
+    **Result:** This token has 847 holders with significant sniper concentration (top 5 wallets hold 34%). The bonding curve is at 72% completion. Dev wallet still holds 8%. **Signal: avoid** (confidence: 0.82).
+  </Accordion>
+
+  <Accordion title="Yield hunting">
+    **User:** What are the best Meteora pools for SOL-USDC right now?
+
+    **Agent:** I'll check pool recommendations for SOL-USDC.
+    *[Calls POST /lp/pools-recommend with base=SOL, quote=USDC]*
+
+    **Result:** Top recommended pool is the SOL-USDC 1bp bin step pool with 127% APR and $4.2M TVL. Suggested strategy: spot distribution, range +/-5%. **Signal: add_liquidity** (confidence: 0.91).
+  </Accordion>
+
+  <Accordion title="Wallet intelligence">
+    **User:** Is this wallet worth following? vhu9Nc7EQi6dpvk9R6GyrDjgrgnR2oyfRAeeYVmQCAp
+
+    **Agent:** I'll pull a full wallet intelligence profile.
+    *[Calls POST /traders/wallet-intel with address parameter]*
+
+    **Result:** 30-day profile shows a sniper archetype with 73% win rate on meme coins. Average hold time: 4.2 hours. Net PnL: +$12,400. Copy-worthiness score: 7.8/10. **Signal: follow** (confidence: 0.88).
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Rate Limits
+
+The chat agent has no artificial rate limits. Query frequency is bounded only by your escrow balance. The underlying Gemini model processes requests in real-time with sub-second latency.
