@@ -1,0 +1,143 @@
+---
+title: "Architecture Overview"
+description: "System architecture of the HYRE Agent API on Cloudflare Workers."
+icon: "sitemap"
+---
+
+# Architecture Overview
+
+HYRE runs on Cloudflare Workers -- V8 isolates with zero cold starts, deployed globally at 300+ edge locations. The stack is designed for sub-second response times and 100% uptime.
+
+---
+
+## System Diagram
+
+```
+                    Client (agent / browser)
+                           |
+                    x402 Payment Header
+                           |
+                           v
+              ┌─────────────────────────┐
+              │   Cloudflare Workers     │
+              │   (Hono framework)       │
+              │                          │
+              │  ┌───────────────────┐   │
+              │  │ x402 Middleware    │   │
+              │  │ (verify payment)  │   │
+              │  └────────┬──────────┘   │
+              │           │              │
+              │  ┌────────v──────────┐   │
+              │  │ Route Handler     │   │
+              │  │ (data fetching)   │   │
+              │  └────────┬──────────┘   │
+              │           │              │
+              │  ┌────────v──────────┐   │
+              │  │ LLM Cascade       │   │
+              │  │ (enrich with AI)  │   │
+              │  └────────┬──────────┘   │
+              │           │              │
+              │  ┌────────v──────────┐   │
+              │  │ Response Builder  │   │
+              │  │ (HyreResponse)    │   │
+              │  └───────────────────┘   │
+              └─────────────────────────┘
+                     |         |
+           ┌─────────┘         └──────────┐
+           v                              v
+    ┌─────────────┐              ┌──────────────┐
+    │ Workers KV  │              │ Cloudflare D1│
+    │ (cache)     │              │ (revenue log)│
+    └─────────────┘              └──────────────┘
+```
+
+---
+
+## Core Components
+
+### Hono Framework
+
+HYRE uses [Hono](https://hono.dev) -- a fast, lightweight web framework built for edge runtimes. Hono provides:
+- Type-safe route handlers with middleware composition
+- CORS, error handling, and request parsing out of the box
+- Zero-dependency compatibility with Cloudflare Workers
+
+### Workers KV (Cache)
+
+All data-fetching endpoints cache upstream responses in **Cloudflare Workers KV** with configurable TTLs:
+
+| Data Type | TTL |
+|-----------|-----|
+| DeFiLlama TVL | 15 minutes |
+| Meteora pool list | 5 minutes |
+| Token metadata | 2 minutes |
+| Wallet PnL | 2 minutes |
+| PumpPortal tokens | 30 seconds |
+
+Cache keys are derived from the endpoint path and query parameters. Cache hits skip both upstream data fetching and LLM enrichment.
+
+### Cloudflare D1 (Database)
+
+Revenue logs are stored in **Cloudflare D1** -- SQLite at the edge. Every paid request logs:
+- Endpoint path
+- Caller wallet address
+- Payment amount
+- Payment protocol (x402 chain)
+- LLM model used
+- Response latency
+
+### Durable Objects
+
+The **PumpPortal Durable Object** maintains an in-memory cache of recent PumpFun token launches:
+- HTTP-based (not WebSocket) for CF Workers compatibility
+- Fed by a cron job every 5 minutes
+- Also accepts manual POST ingestion via `/admin/feed`
+- Queried by Trenches endpoints for real-time token data
+
+---
+
+## Request Lifecycle
+
+<Steps>
+  <Step title="CORS + routing">
+    Hono matches the request path to a route handler. CORS headers are applied globally.
+  </Step>
+
+  <Step title="x402 payment verification">
+    The middleware extracts the `X-PAYMENT` header, normalizes the network format, and forwards to the appropriate facilitator (Dexter for Solana, PayAI for Base/SKALE).
+  </Step>
+
+  <Step title="Cache check">
+    The handler checks Workers KV for a cached response. On cache hit, the cached response is returned immediately (skipping data fetch and LLM).
+  </Step>
+
+  <Step title="Data fetching">
+    On cache miss, the handler fetches data from upstream sources (Solana RPC, Jupiter, Meteora, DeFiLlama, Nansen, etc.).
+  </Step>
+
+  <Step title="LLM enrichment">
+    Raw data is sent to the LLM cascade for interpretation. The cascade tries models in priority order with 8-10s timeouts per model.
+  </Step>
+
+  <Step title="Response assembly">
+    The `enrich()` function assembles the standard `HyreResponse` envelope: `{data, insight, signal, confidence, sources, model_used, latency_ms, timestamp}`.
+  </Step>
+
+  <Step title="Cache write + return">
+    The response is cached in Workers KV and returned to the client. The x402 middleware settles the payment via the facilitator.
+  </Step>
+</Steps>
+
+---
+
+## Deployment
+
+| Property | Value |
+|----------|-------|
+| Platform | Cloudflare Workers |
+| Regions | 300+ edge locations globally |
+| Cold starts | Zero (V8 isolates) |
+| Max execution time | 30 seconds (Workers limit) |
+| Memory limit | 128 MB per isolate |
+| Deploy command | `npm run deploy` (via Wrangler) |
+| Custom domain | `mpp.hyreagent.fun` |
