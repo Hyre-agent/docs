@@ -1,0 +1,92 @@
+---
+title: "TVL Rankings"
+description: "Total Value Locked across DeFi chains with AI trend analysis."
+icon: "building-columns"
+---
+
+# POST /defi/tvl
+
+Returns Total Value Locked (TVL) rankings across DeFi chains, powered by DeFiLlama data with AI-generated trend analysis.
+
+**Price:** $0.001 per request
+
+**Signal vocabulary:** `high_yield` | `medium_yield` | `low_yield` | `risky`
+
+**Sources:** DeFiLlama
+
+---
+
+## Parameters
+
+<ParamField body="chain" type="string" default="all">
+  Chain filter. Options: `solana`, `ethereum`, `all`, or any chain name supported by DeFiLlama.
+</ParamField>
+
+<ParamField body="protocol" type="string">
+  Filter by protocol name (optional).
+</ParamField>
+
+<ParamField body="limit" type="integer" default="20">
+  Maximum number of chains to return (max 50).
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/defi/tvl \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"chain": "all", "limit": 10}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/defi/tvl?chain=all&limit=10" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "chains": [
+      { "name": "Ethereum", "tvl_usd": 62800000000, "token_symbol": "ETH" },
+      { "name": "Solana", "tvl_usd": 12400000000, "token_symbol": "SOL" },
+      { "name": "BSC", "tvl_usd": 5600000000, "token_symbol": "BNB" },
+      { "name": "Arbitrum", "tvl_usd": 3200000000, "token_symbol": "ARB" },
+      { "name": "Base", "tvl_usd": 2800000000, "token_symbol": "ETH" }
+    ],
+    "total_tvl_usd": 98200000000,
+    "filter": { "chain": "all", "protocol": null }
+  },
+  "insight": "Solana TVL surged 12% week-over-week driven by memecoin speculation and Meteora LP inflows. Ethereum dominance declined to 64%. Base showing strong growth at $2.8B, up 18% this month.",
+  "signal": "high_yield",
+  "confidence": 0.87,
+  "sources": ["defillama"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 342,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Data Fields
+
+<Expandable title="Chain TVL fields">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `name` | string | Chain name |
+  | `tvl_usd` | number | Total Value Locked in USD |
+  | `token_symbol` | string | Native gas token symbol |
+</Expandable>
+
+<Info>
+  Data is cached for 15 minutes. TVL figures are sourced from DeFiLlama and include all tracked protocols on each chain.
+</Info>
