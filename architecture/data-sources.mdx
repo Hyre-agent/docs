@@ -1,0 +1,143 @@
+---
+title: "Data Sources"
+description: "Upstream data providers powering HYRE's DeFi intelligence endpoints."
+icon: "database"
+---
+
+# Data Sources
+
+HYRE aggregates data from multiple free, ToS-compliant sources. No paid API keys are required for upstream data -- only the LLM providers and Nansen require authentication.
+
+---
+
+## Source Overview
+
+| Source | Data Type | Endpoints | Rate Limits |
+|--------|-----------|-----------|-------------|
+| **PumpPortal** | PumpFun token launches | Trenches | Cached via Durable Object |
+| **Solana RPC** | On-chain data (accounts, signatures, balances) | Trenches, Traders, LPs | Private RPC (no public RPC limit) |
+| **Jupiter Price API v2** | Real-time token prices | Traders, LPs | Public, generous limits |
+| **Meteora DLMM API** | LP pool analytics | LP Analytics | Public, generous limits |
+| **DeFiLlama** | TVL + yield data | DeFi, deBridge | Public, no auth required |
+| **Nansen** | Smart money labels, flows, PnL | Smart Money | API key required |
+| **deBridge DLN** | Cross-chain bridge quotes | deBridge | Public, no auth required |
+| **Bags.fm** | Meteora DBC token launches | Trenches | Public |
+
+---
+
+## PumpPortal
+
+PumpPortal provides real-time data on PumpFun token launches -- new token creations, bonding curve progress, and graduation events.
+
+**Architecture:** A Cloudflare Durable Object maintains an in-memory cache of recent tokens. A cron job (every 5 minutes) fetches new tokens from Jupiter's unknown token list and ingests them into the DO. The DO also accepts manual POST ingestion via `/admin/feed`.
+
+**Why not WebSocket?** Cloudflare Workers cannot maintain persistent WebSocket client connections. The HTTP-based Durable Object pattern provides equivalent functionality within CF's execution model.
+
+| Property | Value |
+|----------|-------|
+| Cache type | Durable Object (in-memory) |
+| Refresh interval | 5 minutes (cron) |
+| Data freshness | 30 seconds (cache TTL) |
+| Endpoints served | `/trenches/new-tokens`, `/trenches/graduating` |
+
+---
+
+## Solana RPC
+
+HYRE uses a **private Solana RPC endpoint** (not public RPC) because Cloudflare Workers IP ranges are blocked by public Solana RPC providers.
+
+The RPC is used for:
+- `getAccountInfo` -- Token metadata, bonding curve state
+- `getTokenLargestAccounts` -- Top holders / whale detection
+- `getSignaturesForAddress` -- Transaction history for PnL calculation
+- `getTokenAccountsByOwner` -- Wallet position scanning
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP JSON-RPC |
+| Provider | Private (configured via `SOLANA_RPC_URL` env var) |
+| Failover | Multiple RPC URLs supported |
+| Used by | Trenches, Traders, LPs |
+
+---
+
+## Jupiter Price API v2
+
+Jupiter provides real-time token prices on Solana. HYRE uses the v2 API for:
+- Current USD prices for any SPL token
+- Batch price lookups for portfolio valuation
+- Token metadata (name, symbol, decimals)
+
+```
+GET https://api.jup.ag/price/v2?ids=So11111111111111111111111111111111111111112
+```
+
+---
+
+## Meteora DLMM API
+
+Meteora's DLMM API provides liquidity pool analytics:
+- Pool list with TVL, volume, fees, and APR
+- Individual pool detail with bin distribution
+- Server-side filtering and sorting
+
+```
+GET https://dlmm.datapi.meteora.ag/pair/all_with_pagination
+```
+
+| Property | Value |
+|----------|-------|
+| Base URL | `https://dlmm.datapi.meteora.ag` |
+| Auth | None required |
+| Data | Pool TVL, volume, fees, APR, bin distribution |
+| Endpoints served | `/lp/pools`, `/lp/pool-detail`, `/lp/pools-recommend`, `/lp/pools-strategy` |
+
+---
+
+## DeFiLlama
+
+DeFiLlama provides cross-chain DeFi data:
+- Chain TVL rankings (`api.llama.fi/v2/chains`)
+- Yield pool data (`yields.llama.fi/pools`)
+- Protocol TVL breakdowns
+
+| Property | Value |
+|----------|-------|
+| Base URLs | `https://api.llama.fi`, `https://yields.llama.fi` |
+| Auth | None required |
+| Cache TTL | 15 minutes (TVL), 5 minutes (yields) |
+| Endpoints served | `/defi/tvl`, `/defi/yields`, `/debridge/yield-migrate` |
+
+---
+
+## Nansen
+
+Nansen provides institutional-grade smart money intelligence:
+- Token screener by smart money activity
+- Per-token flow intelligence (smart traders vs whales vs KOLs)
+- PnL leaderboards
+- Deep wallet profiles
+
+| Property | Value |
+|----------|-------|
+| Auth | API key required (`NANSEN_API_KEY`) |
+| Chains | Ethereum, Solana, Base, Arbitrum |
+| Endpoints served | `/nansen/token-screener`, `/nansen/flow-intel`, `/nansen/pnl-leaderboard`, `/nansen/wallet-intel` |
+
+---
+
+## deBridge DLN
+
+deBridge's DLN (Decentralized Liquidity Network) provides cross-chain swap quotes:
+- Route estimation with fees and slippage
+- Multi-chain support (Solana, Ethereum, Arbitrum, Base, etc.)
+
+```
+GET https://dln.debridge.finance/v1.0/dln/order/quote
+```
+
+| Property | Value |
+|----------|-------|
+| Base URL | `https://dln.debridge.finance` |
+| Auth | None required |
+| Endpoints served | `/debridge/quote`, `/debridge/yield-migrate` |
