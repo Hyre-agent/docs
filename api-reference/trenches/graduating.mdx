@@ -1,0 +1,103 @@
+---
+title: "Graduating Tokens"
+description: "Tokens near bonding curve graduation (>85% complete)."
+icon: "graduation-cap"
+---
+
+# POST /trenches/graduating
+
+Finds PumpFun tokens that are close to graduating from the bonding curve (>85% progress). These tokens are about to transition to Raydium DEX trading -- a critical event that often triggers price action.
+
+**Price:** $0.003 per request
+
+**Signal vocabulary:** `graduate_soon` | `watch`
+
+**Sources:** PumpPortal, Solana RPC
+
+---
+
+## Parameters
+
+<ParamField body="limit" type="integer" default="10">
+  Maximum number of graduating tokens to return.
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/trenches/graduating \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"limit": 5}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/trenches/graduating?limit=5" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "graduating": [
+      {
+        "mint": "9qWV3z...",
+        "name": "GraduatingToken",
+        "symbol": "GRAD",
+        "progress_pct": 92.4,
+        "sol_in_curve": 378.2,
+        "estimated_hours_remaining": 1.2,
+        "holders": 1240,
+        "urgency": "high"
+      },
+      {
+        "mint": "3kFm8B...",
+        "name": "AlmostThere",
+        "symbol": "ALMT",
+        "progress_pct": 87.1,
+        "sol_in_curve": 312.8,
+        "estimated_hours_remaining": 6.4,
+        "holders": 890,
+        "urgency": "medium"
+      }
+    ],
+    "total_found": 2
+  },
+  "insight": "GRAD is 1.2 hours from graduation with strong organic buying. 1,240 holders and no dominant sniper wallets. ALMT is further out at 6.4 hours with moderate momentum.",
+  "signal": "graduate_soon",
+  "confidence": 0.85,
+  "sources": ["pumpportal", "solana-rpc"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 1234,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Data Fields
+
+<Expandable title="Graduating token fields">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `mint` | string | Token mint address |
+  | `name` | string | Token name |
+  | `symbol` | string | Token ticker |
+  | `progress_pct` | number | Bonding curve completion percentage |
+  | `sol_in_curve` | number | Total SOL deposited in the bonding curve |
+  | `estimated_hours_remaining` | number | Estimated hours until graduation |
+  | `holders` | number | Current holder count |
+  | `urgency` | string | `high` (>90%), `medium` (85-90%) |
+</Expandable>
+
+<Info>
+  Graduation occurs when the bonding curve reaches 100% and the token migrates to Raydium. This typically triggers a price spike as DEX trading opens.
+</Info>
