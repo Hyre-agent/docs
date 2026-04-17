@@ -1,0 +1,106 @@
+---
+title: "Pool Detail"
+description: "Deep analytics for a specific Meteora DLMM pool — volume history, fee breakdown, bin distribution."
+icon: "chart-bar"
+---
+
+# POST /lp/pool-detail
+
+Returns detailed analytics for a single Meteora DLMM pool, including volume history, fee breakdown, bin distribution, and position recommendations.
+
+**Price:** $0.003 per request
+
+**Signal vocabulary:** `add_liquidity` | `hold` | `remove`
+
+**Sources:** Meteora DLMM
+
+---
+
+## Parameters
+
+<ParamField body="address" type="string" required>
+  Meteora DLMM pool address.
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/lp/pool-detail \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"address": "5BVcXj8VaJ5hgNFYnUmxDkRpSWaQj5m9zLJFo3YUrjhk"}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/lp/meteora/pools/5BVcXj8VaJ5hgNFYnUmxDkRpSWaQj5m9zLJFo3YUrjhk" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "pool": {
+      "address": "5BVc...",
+      "name": "SOL-USDC",
+      "bin_step": 1,
+      "base_fee_pct": 0.01,
+      "current_price": 150.42,
+      "tvl_usd": 4200000,
+      "volume_24h_usd": 18700000,
+      "volume_7d_usd": 98400000,
+      "fees_24h_usd": 18700,
+      "fees_7d_usd": 94200,
+      "apr_24h_pct": 162.5,
+      "apr_7d_pct": 128.3,
+      "active_bin_id": 8234,
+      "total_positions": 342
+    },
+    "volume_history": [
+      { "date": "2026-04-16", "volume_usd": 19200000 },
+      { "date": "2026-04-15", "volume_usd": 17800000 }
+    ]
+  },
+  "insight": "Strong, consistent volume averaging $18.7M/day over the past week. 7d APR at 128% is more sustainable than the 24h spike of 162%. With 342 active positions, liquidity depth is healthy. Good pool for new positions.",
+  "signal": "add_liquidity",
+  "confidence": 0.84,
+  "sources": ["meteora-dlmm"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 678,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Data Fields
+
+<Expandable title="Pool detail fields">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `address` | string | Pool contract address |
+  | `name` | string | Pool name |
+  | `bin_step` | integer | Price granularity in basis points |
+  | `base_fee_pct` | number | Base fee percentage per swap |
+  | `current_price` | number | Current token X/Y price |
+  | `tvl_usd` | number | Total Value Locked |
+  | `volume_24h_usd` | number | 24-hour trading volume |
+  | `volume_7d_usd` | number | 7-day trading volume |
+  | `fees_24h_usd` | number | 24-hour fee revenue |
+  | `fees_7d_usd` | number | 7-day fee revenue |
+  | `apr_24h_pct` | number | APR based on 24h fees |
+  | `apr_7d_pct` | number | APR based on 7d fees |
+  | `active_bin_id` | integer | Current active bin |
+  | `total_positions` | integer | Number of active LP positions |
+</Expandable>
+
+<Note>
+  The 7-day APR is typically more reliable than the 24-hour APR, which can spike during volatile periods. Use the 7d figure for position planning.
+</Note>
