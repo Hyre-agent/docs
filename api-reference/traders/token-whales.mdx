@@ -1,0 +1,101 @@
+---
+title: "Token Whales"
+description: "Whale activity — largest holders and accumulation/distribution flows for a token."
+icon: "fish"
+---
+
+# POST /traders/token-whales
+
+Identifies the largest holders (whales) of any Solana token and analyzes whether they are accumulating or distributing. Useful for gauging smart money sentiment.
+
+**Price:** $0.003 per request
+
+**Signal vocabulary:** `accumulate` | `distribute` | `ignore`
+
+**Sources:** Solana RPC, Jupiter
+
+---
+
+## Parameters
+
+<ParamField body="mint" type="string" required>
+  Solana token mint address.
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/traders/token-whales \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"mint": "So11111111111111111111111111111111111111112"}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/traders/token/So11111111111111111111111111111111111111112/whales" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "mint": "So11111111111111111111111111111111111111112",
+    "top_holders": [
+      {
+        "address": "9WzDX...",
+        "balance": 1250000,
+        "pct_of_supply": 12.5,
+        "value_usd": 187500
+      },
+      {
+        "address": "4kPmR...",
+        "balance": 890000,
+        "pct_of_supply": 8.9,
+        "value_usd": 133500
+      }
+    ],
+    "concentration": {
+      "top_5_pct": 38.2,
+      "top_10_pct": 52.1,
+      "top_20_pct": 67.8
+    },
+    "total_holders": 4231
+  },
+  "insight": "Top 5 wallets control 38% of supply — moderate concentration. The largest holder (9WzDX) increased their position by 15% this week, signaling active accumulation.",
+  "signal": "accumulate",
+  "confidence": 0.81,
+  "sources": ["solana-rpc", "jupiter"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 876,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Data Fields
+
+<Expandable title="Holder fields">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `address` | string | Wallet address |
+  | `balance` | number | Token balance (human units) |
+  | `pct_of_supply` | number | Percentage of total supply held |
+  | `value_usd` | number | Current USD value of holdings |
+</Expandable>
+
+<Expandable title="Concentration metrics">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `top_5_pct` | number | Percentage held by top 5 wallets |
+  | `top_10_pct` | number | Percentage held by top 10 wallets |
+  | `top_20_pct` | number | Percentage held by top 20 wallets |
+</Expandable>
