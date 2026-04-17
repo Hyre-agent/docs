@@ -1,0 +1,78 @@
+---
+title: Welcome to HYRE
+description: AI-powered DeFi intelligence. Pay per query via x402 — no API keys, no subscriptions.
+icon: hand-wave
+---
+
+HYRE is a DeFi data API that returns AI-interpreted insights with every response. 22 endpoints across 6 segments, powered by Gemini 2.5 Flash on Cloudflare Workers.
+
+Payment is the only gate. No API keys needed — every endpoint is paid via the [x402 protocol](/payment/x402-protocol) on Solana, Base, or SKALE.
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Make your first paid API call in under 2 minutes.
+  </Card>
+  <Card title="Agent Playground" icon="message-bot" href="/playground/overview">
+    Chat with HYRE via our web interface — sign in with Privy, no wallet setup.
+  </Card>
+</CardGroup>
+
+## Explore Endpoints
+
+<CardGroup cols={3}>
+  <Card title="Trenches" icon="crosshairs" href="/api-reference/trenches/new-tokens">
+    PumpFun launches, bonding curves, token verdicts, sniper detection.
+  </Card>
+  <Card title="Traders" icon="chart-line" href="/api-reference/traders/wallet-intel">
+    Wallet PnL, positions, top wallets, whale tracking, OHLCV.
+  </Card>
+  <Card title="LP Analytics" icon="chart-pie" href="/api-reference/lp/pools">
+    Meteora DLMM pools, AI recommendations, position rebalancing.
+  </Card>
+  <Card title="DeFi" icon="globe" href="/api-reference/defi/tvl">
+    Cross-chain TVL snapshots and yield opportunities.
+  </Card>
+  <Card title="Smart Money" icon="brain" href="/api-reference/nansen/flow-intel">
+    Nansen-powered flow intelligence, token screening, wallet profiling.
+  </Card>
+  <Card title="Ask Anything" icon="comments" href="/api-reference/ask">
+    Natural language meta-endpoint — HYRE routes your question to the right tool.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+<Steps>
+  <Step title="Send a request">
+    POST to any endpoint with your data query. No authentication headers needed.
+  </Step>
+  <Step title="Pay via x402">
+    The endpoint returns `402 Payment Required` with pricing. Your agent or wallet signs the payment automatically.
+  </Step>
+  <Step title="Get AI insights">
+    Receive structured data + LLM-interpreted insight, signal, and confidence score in a single response.
+  </Step>
+</Steps>
+
+## Standard Response
+
+Every paid endpoint returns this envelope:
+
+```json
+{
+  "data": { ... },
+  "insight": "SOL-USDC pool on Meteora offers 40% APR with deep liquidity...",
+  "signal": "add_liquidity",
+  "confidence": 0.85,
+  "sources": ["meteora-dlmm"],
+  "model_used": "gemini-2.5-flash-lite",
+  "latency_ms": 2100,
+  "timestamp": "2026-04-17T00:00:00Z"
+}
+```
+
+<Note>
+  Prefer a chat interface? Try the [Agent Playground](https://hyreagent.fun/chat) — sign in with email, get a custodial wallet, and start chatting. No wallet setup required.
+</Note>
