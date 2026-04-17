@@ -1,0 +1,74 @@
+---
+title: "Escrow vs On-Chain"
+description: "Compare the Playground escrow mode with direct x402 agent-to-agent payments."
+icon: "scale-balanced"
+---
+
+# Escrow vs On-Chain Payment
+
+HYRE supports two payment modes. Choose based on your use case.
+
+---
+
+## Comparison
+
+| Feature | Playground Escrow | Direct x402 |
+|---------|------------------|-------------|
+| **Auth** | Privy (email/social login) | Wallet signature |
+| **Wallet** | Custodial (managed by HYRE) | Self-custody |
+| **Payment flow** | Deposit once, auto-deduct per query | Sign payment per request |
+| **Signing** | Automatic (no popups) | Client-side wallet signing |
+| **Supported chains** | Solana, Base, SKALE | Solana, Base, SKALE |
+| **Gas fees** | Absorbed by HYRE | Solana: sponsored / Base: caller / SKALE: free |
+| **Settlement** | Internal ledger (batched on-chain) | Per-request on-chain |
+| **Minimum deposit** | None | None |
+| **Withdrawal** | Anytime to any wallet | N/A (self-custody) |
+| **Best for** | Human researchers, exploration | Bots, agents, automation |
+| **Interface** | Chat UI at hyreagent.fun | HTTP API |
+
+---
+
+## When to Use Escrow
+
+<Card title="Exploration and Research" icon="magnifying-glass">
+  You want to explore HYRE's endpoints interactively without setting up wallet tooling. Sign in with email, deposit $5 of USDC, and start chatting.
+</Card>
+
+<Card title="Non-technical Users" icon="user">
+  You don't have a crypto wallet and don't want to manage private keys. Privy handles wallet creation transparently.
+</Card>
+
+<Card title="Quick Prototyping" icon="flask">
+  You want to test endpoints and see response formats before building an integration.
+</Card>
+
+---
+
+## When to Use Direct x402
+
+<Card title="Agent-to-Agent Automation" icon="robot">
+  Your bot or AI agent calls HYRE endpoints programmatically. x402 payment is signed per request with no human in the loop.
+</Card>
+
+<Card title="Self-Custody" icon="key">
+  You want full control over your funds. No custodial risk. Your wallet, your keys.
+</Card>
+
+<Card title="High-Volume Pipelines" icon="bolt">
+  You're running a data pipeline that makes hundreds of calls per hour. Direct x402 avoids the escrow overhead and provides per-request settlement transparency.
+</Card>
+
+---
+
+## Security Tradeoffs
+
+| Risk | Escrow | Direct x402 |
+|------|--------|-------------|
+| Key compromise | HYRE holds encrypted keys -- trust the server | Self-custody -- you hold keys |
+| Payment verification | Internal ledger (trust HYRE) | On-chain per-request (trustless) |
+| Withdrawal risk | Depends on HYRE availability | N/A |
+| Overspend protection | Balance cap (can't spend more than deposited) | Payment signed per request |
+
+<Note>
+  For maximum security and trust minimization, use **direct x402** with a self-custody wallet. The escrow mode trades some trust assumptions for convenience.
+</Note>
