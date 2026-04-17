@@ -1,0 +1,85 @@
+---
+title: "Agent Playground"
+description: "Chat with an AI agent that calls HYRE endpoints on your behalf. No wallet setup required."
+icon: "message-bot"
+---
+
+# Agent Playground
+
+The HYRE Agent Playground at [hyreagent.fun/chat](https://hyreagent.fun/chat) is a chat interface where an AI agent interprets your DeFi questions, selects the right tools, pays the micro-fee from your custodial wallet, and returns enriched results inline.
+
+Think of it as ChatGPT for DeFi, backed by real-time on-chain data and paid transparently per query.
+
+---
+
+## How It Works
+
+<Steps>
+  <Step title="You ask a question">
+    Type a natural language question like *"What's the verdict on this token: 7xKX..."* or *"Show me top yielding Meteora pools"*.
+  </Step>
+
+  <Step title="Agent selects tools">
+    The chat agent (Gemini 2.5 Flash-Lite) analyzes your question and proposes one or more HYRE tools to call. You see a tool proposal card before execution.
+  </Step>
+
+  <Step title="Payment executes automatically">
+    The backend signs an EIP-3009 `TransferWithAuthorization` from your custodial wallet. No signing popups. The fee is deducted from your escrow balance.
+  </Step>
+
+  <Step title="Results stream back">
+    The AI-enriched response is displayed inline with the raw data, insight, signal, and confidence score. The agent summarizes the key takeaways.
+  </Step>
+</Steps>
+
+---
+
+## Architecture
+
+```
+User (browser)
+  |
+  v
+Privy Auth (JWT)
+  |
+  v
+Chat Agent (Gemini 2.5 Flash-Lite)
+  |
+  v
+Tool Router --> HYRE API (x402 payment via escrow)
+  |
+  v
+Response + AI Summary
+```
+
+---
+
+## Available Tool Families
+
+The chat agent can call any of these tool families:
+
+| Tool Family | Endpoints | Use Case |
+|-------------|-----------|----------|
+| Trenches | 7 | New tokens, snipers, verdicts, graduating |
+| Traders | 6 | Wallet PnL, positions, whale tracking |
+| LP Analytics | 6 | Pool search, recommendations, rebalance |
+| DeFi | 2 | TVL rankings, yield opportunities |
+| Smart Money | 4 | Nansen flow intel, screener, wallet profiles |
+| Cross-chain | 2 | Bridge quotes, yield migration |
+| Ask | 1 | Natural language catch-all |
+
+<Info>
+  The agent auto-detects Solana token mints and wallet addresses in your messages. You can paste an address directly and the agent will figure out the right endpoint.
+</Info>
+
+---
+
+## Key Differences from Direct API
+
+| Feature | Playground | Direct x402 |
+|---------|-----------|-------------|
+| Auth | Privy (email/social) | Wallet signature |
+| Payment | Custodial escrow | On-chain per request |
+| Interface | Chat UI | HTTP API |
+| Signing | Automatic (no popups) | Client-side |
+| Best for | Exploration, research | Automation, bots, agents |
