@@ -46,84 +46,86 @@
       "github": "https://github.com/Hyre-agent"
     }
   },
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": ["introduction", "quickstart", "pricing"]
-    },
-    {
-      "group": "Agent Playground",
-      "pages": [
-        "playground/overview",
-        "playground/privy-auth",
-        "playground/escrow-wallet",
-        "playground/chat-agent",
-        "playground/tool-execution"
-      ]
-    },
-    {
-      "group": "Payment",
-      "pages": [
-        "payment/x402-protocol",
-        "payment/supported-chains",
-        "payment/escrow-vs-onchain"
-      ]
-    },
-    {
-      "group": "Architecture",
-      "pages": [
-        "architecture/overview",
-        "architecture/llm-cascade",
-        "architecture/data-sources"
-      ]
-    },
-    {
-      "group": "API Reference",
-      "pages": [
-        "api-reference/overview",
-        "api-reference/ask"
-      ]
-    },
-    {
-      "group": "Trenches",
-      "pages": [
-        "api-reference/trenches/new-tokens",
-        "api-reference/trenches/token-verdict",
-        "api-reference/trenches/graduating"
-      ]
-    },
-    {
-      "group": "Traders",
-      "pages": [
-        "api-reference/traders/wallet-intel",
-        "api-reference/traders/top-wallets",
-        "api-reference/traders/token-whales"
-      ]
-    },
-    {
-      "group": "LP Analytics",
-      "pages": [
-        "api-reference/lp/pools",
-        "api-reference/lp/pools-recommend",
-        "api-reference/lp/pool-detail"
-      ]
-    },
-    {
-      "group": "DeFi",
-      "pages": [
-        "api-reference/defi/tvl",
-        "api-reference/defi/yields"
-      ]
-    },
-    {
-      "group": "Smart Money",
-      "pages": [
-        "api-reference/nansen/flow-intel",
-        "api-reference/nansen/screener",
-        "api-reference/nansen/wallet-intel"
-      ]
-    }
-  ],
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": ["introduction", "quickstart", "pricing"]
+      },
+      {
+        "group": "Agent Playground",
+        "pages": [
+          "playground/overview",
+          "playground/privy-auth",
+          "playground/escrow-wallet",
+          "playground/chat-agent",
+          "playground/tool-execution"
+        ]
+      },
+      {
+        "group": "Payment",
+        "pages": [
+          "payment/x402-protocol",
+          "payment/supported-chains",
+          "payment/escrow-vs-onchain"
+        ]
+      },
+      {
+        "group": "Architecture",
+        "pages": [
+          "architecture/overview",
+          "architecture/llm-cascade",
+          "architecture/data-sources"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api-reference/overview",
+          {
+            "group": "Trenches",
+            "pages": [
+              "api-reference/trenches/new-tokens",
+              "api-reference/trenches/token-verdict",
+              "api-reference/trenches/graduating"
+            ]
+          },
+          {
+            "group": "Traders",
+            "pages": [
+              "api-reference/traders/wallet-intel",
+              "api-reference/traders/top-wallets",
+              "api-reference/traders/token-whales"
+            ]
+          },
+          {
+            "group": "LP Analytics",
+            "pages": [
+              "api-reference/lp/pools",
+              "api-reference/lp/pools-recommend",
+              "api-reference/lp/pool-detail"
+            ]
+          },
+          {
+            "group": "DeFi",
+            "pages": [
+              "api-reference/defi/tvl",
+              "api-reference/defi/yields"
+            ]
+          },
+          {
+            "group": "Smart Money",
+            "pages": [
+              "api-reference/nansen/flow-intel",
+              "api-reference/nansen/screener",
+              "api-reference/nansen/wallet-intel"
+            ]
+          },
+          "api-reference/ask"
+        ]
+      }
+    ]
+  },
   "api": {
     "openapi": "https://mpp.hyreagent.fun/openapi.json",
     "playground": {
