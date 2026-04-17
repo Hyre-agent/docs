@@ -1,0 +1,128 @@
+---
+title: "x402 Protocol"
+description: "How HYRE uses the HTTP 402 Payment Required protocol for machine-to-machine payments."
+icon: "lock"
+---
+
+# x402 Protocol
+
+HYRE uses the **x402** protocol for payment -- an extension of HTTP that turns the `402 Payment Required` status code into a machine-readable payment flow. Agents pay per request with no API keys, no OAuth, and no subscriptions.
+
+---
+
+## How x402 Works
+
+<Steps>
+  <Step title="Agent sends request without payment">
+    ```bash
+    curl https://mpp.hyreagent.fun/defi/tvl
+    ```
+
+    The server returns HTTP 402 with payment requirements in the response body.
+  </Step>
+
+  <Step title="Server returns 402 with payment details">
+    ```json
+    {
+      "x402Version": 1,
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "solana",
+          "maxAmountRequired": "1000",
+          "resource": "https://mpp.hyreagent.fun/defi/tvl",
+          "payTo": "7G73PLhKvAPBGTzG5ESAE4coE7QrVeTTKfhTxQZbyGgC",
+          "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "description": "Total Value Locked across chains",
+          "maxTimeoutSeconds": 300
+        }
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Agent signs payment and retries">
+    The agent constructs a payment payload, signs it with its wallet, base64-encodes it, and attaches it as the `X-PAYMENT` header.
+
+    ```bash
+    curl -X POST https://mpp.hyreagent.fun/defi/tvl \
+      -H "X-PAYMENT: eyJ4NDAyVmVyc2lvbiI6MSwi..." \
+      -H "Content-Type: application/json" \
+      -d '{"chain": "solana"}'
+    ```
+  </Step>
+
+  <Step title="Facilitator verifies and settles">
+    The HYRE server forwards the payment to a **facilitator** that verifies the signature and settles the USDC transfer on-chain. If valid, the server processes the request and returns data.
+  </Step>
+</Steps>
+
+---
+
+## Facilitators
+
+HYRE uses two facilitators depending on the payment chain:
+
+| Chain | Facilitator | URL | Gas |
+|-------|------------|-----|-----|
+| Solana | Dexter | `https://x402.dexter.cash` | Sponsored by HYRE |
+| Base | PayAI | `https://facilitator.payai.network` | Caller pays (~$0.01) |
+| SKALE | PayAI | `https://facilitator.payai.network` | Free (sFUEL) |
+
+The facilitator acts as a neutral third party:
+1. **Verify** -- Checks the payment signature is valid and the amount is sufficient.
+2. **Settle** -- Executes the USDC transfer on-chain after the server delivers data.
+
+---
+
+## Payment Header Format
+
+The `X-PAYMENT` header contains a base64-encoded JSON object:
+
+```json
+{
+  "x402Version": 1,
+  "scheme": "exact",
+  "network": "solana",
+  "payload": {
+    "signature": "<base58-encoded-solana-signature>",
+    "transaction": "<base64-encoded-transaction>"
+  }
+}
+```
+
+For EVM chains (Base, SKALE), the payload contains an EIP-712 signed authorization instead of a Solana transaction.
+
+---
+
+## Discovery
+
+Agents can discover HYRE's payment requirements programmatically:
+
+<CodeGroup>
+```bash OpenAPI spec
+curl https://mpp.hyreagent.fun/openapi.json | jq '.info["x-payment-protocols"]'
+```
+
+```bash Agent card
+curl https://mpp.hyreagent.fun/.well-known/agent-card.json | jq '.capabilities.x402'
+```
+
+```bash x402 discovery
+curl https://mpp.hyreagent.fun/.well-known/x402 | jq
+```
+</CodeGroup>
+
+---
+
+## Pay-To Addresses
+
+| Chain | Address |
+|-------|---------|
+| Solana | `7G73PLhKvAPBGTzG5ESAE4coE7QrVeTTKfhTxQZbyGgC` |
+| Base (EVM) | `0xb5998e11E666Fd1e7f3B8e8d9122A755eec1E9b7` |
+| SKALE (EVM) | `0xb5998e11E666Fd1e7f3B8e8d9122A755eec1E9b7` |
+
+<Warning>
+  Root paths (`/`) only accept Solana payments. Use `/base/*` for Base and `/skale/*` for SKALE. Sending an EVM payment to a root path returns a 402 redirect hint.
+</Warning>
