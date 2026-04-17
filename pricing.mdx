@@ -1,0 +1,104 @@
+---
+title: "Pricing"
+description: "Pay-per-query pricing for all HYRE endpoints. No subscriptions. No rate limits."
+icon: "tag"
+---
+
+# Pricing
+
+Every HYRE endpoint charges a fixed micro-fee in USDC. Prices are denominated in **micro-USDC** (1 USDC = 1,000,000 micro-USDC) and displayed below as their USD equivalent.
+
+No subscriptions. No monthly minimums. No rate limits. You pay only for what you use.
+
+---
+
+## Trenches (Meme Coin Intel)
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `POST /trenches/new-tokens` | $0.008 | Real-time PumpFun token launches |
+| `POST /trenches/curve` | $0.001 | Bonding curve progress for a token |
+| `POST /trenches/token` | $0.002 | Token metadata + top holders |
+| `POST /trenches/token-snipers` | $0.004 | Sniper detection (early buyers) |
+| `POST /trenches/graduating` | $0.003 | Tokens near graduation (>85%) |
+| `POST /trenches/bags/new-tokens` | $0.008 | New tokens from Bags.fm (Meteora DBC) |
+| `POST /trenches/token-verdict` | $0.015 | Full AI verdict on a token |
+
+## Traders (Copy Trading + Whales)
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `POST /traders/wallet-pnl` | $0.005 | Wallet PnL (realized + unrealized) |
+| `POST /traders/wallet-positions` | $0.003 | Current token holdings with prices |
+| `POST /traders/top-wallets` | $0.008 | Top performing wallets leaderboard |
+| `POST /traders/token-whales` | $0.003 | Whale activity for a token |
+| `POST /traders/token-ohlcv` | $0.002 | Price and volume data |
+| `POST /traders/wallet-intel` | $0.012 | Full 30-day wallet intelligence |
+
+## LP Analytics (Meteora DLMM)
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `POST /lp/pools` | $0.001 | All Meteora DLMM pools with analytics |
+| `POST /lp/pools-recommend` | $0.008 | AI pool recommendation for a token pair |
+| `POST /lp/pool-detail` | $0.003 | Deep analytics for a specific pool |
+| `POST /lp/wallet-positions` | $0.004 | LP positions for a wallet |
+| `POST /lp/position-rebalance` | $0.010 | Rebalance signal for a position |
+| `POST /lp/pools-strategy` | $0.020 | Full LP strategy brief |
+
+## DeFi (Macro)
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `POST /defi/tvl` | $0.001 | Total Value Locked across chains |
+| `POST /defi/yields` | $0.002 | Top yield pools multi-chain |
+
+## Cross-Chain (deBridge)
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `POST /debridge/quote` | $0.002 | Cross-chain swap quote with AI verdict |
+| `POST /debridge/yield-migrate` | $0.005 | Yield migration advisor |
+
+## Smart Money (Nansen)
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `POST /nansen/token-screener` | $0.025 | Find tokens smart money is accumulating |
+| `POST /nansen/flow-intel` | $0.020 | Smart trader/whale/KOL net-flow |
+| `POST /nansen/pnl-leaderboard` | $0.030 | Top PnL traders for a token |
+| `POST /nansen/wallet-intel` | $0.050 | Deep wallet profile + smart trades |
+
+## Meta
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `POST /ask` | $0.025 | Natural language DeFi query |
+
+---
+
+## Payment Split
+
+Every payment is split automatically:
+
+| Recipient | Share |
+|-----------|-------|
+| HYRE Wallet | 90% |
+| Treasury | 10% |
+
+<Info>
+  Gas fees on Solana are sponsored by HYRE. On SKALE, gas is natively free (sFUEL). On Base, the caller pays standard L2 gas (~$0.01).
+</Info>
+
+---
+
+## Free Endpoints
+
+These endpoints require no payment:
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /` | Health check + service info |
+| `GET /openapi.json` | OpenAPI 3.1 specification |
+| `GET /.well-known/agent-card.json` | A2A + ERC-8004 agent discovery |
+| `GET /.well-known/x402` | x402 resource discovery |
