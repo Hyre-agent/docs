@@ -1,0 +1,158 @@
+---
+title: "API Overview"
+description: "Base URL, authentication, response format, and signal vocabulary for all HYRE endpoints."
+icon: "code"
+---
+
+# API Overview
+
+## Base URL
+
+```
+https://mpp.hyreagent.fun
+```
+
+All endpoints are available on three chains via URL prefixes:
+
+| Chain | Prefix | Example |
+|-------|--------|---------|
+| Solana | `/` (root) | `/defi/tvl` |
+| Base | `/base/` | `/base/defi/tvl` |
+| SKALE | `/skale/` | `/skale/defi/tvl` |
+
+---
+
+## Authentication
+
+HYRE uses **x402 payment** instead of API keys. Every paid request must include an `X-PAYMENT` header with a signed payment payload.
+
+1. Call the endpoint without payment to receive a 402 challenge.
+2. Sign the payment with your wallet.
+3. Retry with the `X-PAYMENT` header attached.
+
+See [x402 Protocol](/payment/x402-protocol) for details.
+
+---
+
+## Standard Response Format
+
+Every paid endpoint returns the `HyreResponse` envelope:
+
+```json
+{
+  "data": {
+    // Structured data from upstream sources
+    // Shape varies per endpoint
+  },
+  "insight": "AI-generated actionable summary (1-2 sentences)",
+  "signal": "actionable_signal",
+  "confidence": 0.87,
+  "sources": ["defillama", "jupiter"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 342,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+<ResponseField name="data" type="object" required>
+  Structured data from upstream sources. Shape varies per endpoint.
+</ResponseField>
+
+<ResponseField name="insight" type="string">
+  AI-generated actionable insight in 1-2 sentences. `null` if all LLM models failed (HTTP 206).
+</ResponseField>
+
+<ResponseField name="signal" type="string" required>
+  Decision signal for the caller. Vocabulary depends on the endpoint segment.
+</ResponseField>
+
+<ResponseField name="confidence" type="number" required>
+  LLM confidence in the signal, from 0.0 to 1.0.
+</ResponseField>
+
+<ResponseField name="sources" type="string[]" required>
+  List of upstream data sources used (e.g., `["defillama"]`, `["solana-rpc", "jupiter"]`).
+</ResponseField>
+
+<ResponseField name="model_used" type="string">
+  Name of the LLM model that produced the insight. `null` on HTTP 206.
+</ResponseField>
+
+<ResponseField name="latency_ms" type="integer" required>
+  Total response time in milliseconds (data fetch + LLM + response assembly).
+</ResponseField>
+
+<ResponseField name="timestamp" type="string" required>
+  ISO 8601 timestamp of the response.
+</ResponseField>
+
+---
+
+## Signal Vocabulary
+
+Each endpoint segment uses a specific set of signals:
+
+| Segment | Signals | Meaning |
+|---------|---------|---------|
+| **Trenches** | `snipe`, `watch`, `avoid` | Token action recommendation |
+| **Trenches** (graduation) | `graduate_soon`, `watch` | Bonding curve urgency |
+| **Traders** | `follow`, `ignore` | Wallet copy-trade worthiness |
+| **Traders** (holdings) | `accumulate`, `distribute`, `ignore` | Position momentum |
+| **LPs** | `add_liquidity`, `rebalance`, `hold`, `remove` | LP position action |
+| **DeFi** | `high_yield`, `medium_yield`, `low_yield`, `risky` | Yield risk assessment |
+| **deBridge** (quote) | `execute`, `wait`, `avoid` | Bridge execution timing |
+| **deBridge** (yield) | `migrate`, `stay`, `wait` | Cross-chain move decision |
+| **Nansen** | `follow`, `ignore`, `accumulate`, `distribute` | Smart money action |
+
+---
+
+## HTTP Status Codes
+
+| Code | Meaning |
+|------|---------|
+| `200` | Success -- full AI-enriched response |
+| `206` | Partial -- raw data returned, LLM enrichment failed |
+| `402` | Payment Required -- attach x402 payment header |
+| `400` | Bad Request -- invalid parameters |
+| `404` | Not Found -- endpoint does not exist |
+| `500` | Server Error -- unexpected failure |
+
+---
+
+## Request Methods
+
+All endpoints support both `GET` and `POST`:
+
+<Tabs>
+  <Tab title="POST (recommended)">
+    Parameters in the JSON body. Preferred for x402 compatibility.
+
+    ```bash
+    curl -X POST https://mpp.hyreagent.fun/trenches/token-verdict \
+      -H "Content-Type: application/json" \
+      -H "X-PAYMENT: <payment>" \
+      -d '{"mint": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"}'
+    ```
+  </Tab>
+
+  <Tab title="GET (legacy)">
+    Parameters in the URL path and query string. Supported for backward compatibility.
+
+    ```bash
+    curl "https://mpp.hyreagent.fun/trenches/token/7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU/verdict" \
+      -H "X-PAYMENT: <payment>"
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## OpenAPI Specification
+
+The full OpenAPI 3.1 spec is available at:
+
+```
+https://mpp.hyreagent.fun/openapi.json
+```
+
+It includes `x-payment-info` extensions for every endpoint with pricing, network details, and facilitator URLs.
