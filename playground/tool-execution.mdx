@@ -1,0 +1,98 @@
+---
+title: "Tool Execution"
+description: "How the Playground agent executes paid API calls and settles payments on-chain."
+icon: "gear"
+---
+
+# Tool Execution
+
+When the chat agent decides to call a HYRE endpoint, it triggers a relay pattern that deducts the fee from the user's escrow balance and forwards the request to the API.
+
+---
+
+## Execution Flow
+
+```
+Chat Agent (Gemini)
+  |
+  | tool_call: { name: "token-verdict", params: { mint: "7xKX..." } }
+  |
+  v
+/playground/call (backend)
+  |
+  |-- 1. Validate Privy JWT
+  |-- 2. Check escrow balance >= endpoint price
+  |-- 3. Deduct price from escrow
+  |-- 4. Forward request to HYRE API with X-Internal-Auth header
+  |-- 5. Return response to chat agent
+  |
+  v
+Chat Agent formats + streams response to user
+```
+
+---
+
+## Payment Signing (EVM Chains)
+
+On Base and SKALE, the backend uses **EIP-3009 TransferWithAuthorization** to sign USDC transfers from the custodial wallet:
+
+1. The backend decrypts the user's wallet private key.
+2. It constructs a `TransferWithAuthorization` payload with:
+   - `from`: user's custodial wallet
+   - `to`: HYRE recipient address
+   - `value`: endpoint price in atomic USDC
+   - `validAfter`: current timestamp
+   - `validBefore`: current timestamp + 300 seconds
+3. Signs the EIP-712 typed data with the decrypted key.
+4. The fee payer submits the signed authorization on-chain.
+5. A real transaction hash is returned and verifiable on the block explorer.
+
+<Note>
+  On Solana, the escrow uses an internal balance ledger with periodic on-chain settlement rather than per-query transactions. This reduces gas overhead.
+</Note>
+
+---
+
+## Internal Auth Bypass
+
+The `/playground/call` endpoint bypasses the x402 payment middleware using a shared secret (`MPP_SECRET_KEY`):
+
+```
+X-Internal-Auth: <MPP_SECRET_KEY>
+```
+
+This header is only known to the Cloudflare Worker itself. External clients cannot forge it. The x402 middleware checks for this header before requiring payment, allowing the playground to pre-authorize queries via the escrow balance.
+
+---
+
+## Error Handling
+
+| Scenario | Behavior |
+|----------|----------|
+| Insufficient balance | Error returned before API call. No charge. |
+| API call fails (5xx) | Balance refunded. Error shown in chat. |
+| LLM cascade fails | HTTP 206 returned with raw data. User still charged (data was delivered). |
+| Invalid parameters | Validation error returned. No charge. |
+| Network timeout | Automatic retry once. If second attempt fails, balance refunded. |
+
+---
+
+## Transaction Verification
+
+Every paid query returns metadata that can be verified:
+
+```json
+{
+  "payment": {
+    "amount_usdc": 0.015,
+    "chain": "solana",
+    "tx_hash": "4vJ9JU1bJJE96FWSJKvHsmmFAD...",
+    "explorer": "https://solscan.io/tx/4vJ9JU1bJJE96FWSJKvHsmmFAD...",
+    "deducted_from_escrow": true
+  }
+}
+```
+
+<Info>
+  On SKALE, transaction hashes can be verified on the [SKALE Europa explorer](https://elated-tan-skat.explorer.mainnet.skalenodes.com).
+</Info>
