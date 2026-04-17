@@ -1,0 +1,60 @@
+---
+title: "Privy Authentication"
+description: "How email and social login works in the HYRE Agent Playground."
+icon: "fingerprint"
+---
+
+# Privy Authentication
+
+The Agent Playground uses [Privy](https://privy.io) for authentication. Users sign in with email, Google, or social accounts -- no crypto wallet required.
+
+---
+
+## Auth Flow
+
+<Steps>
+  <Step title="User opens the Playground">
+    Navigate to [hyreagent.fun/chat](https://hyreagent.fun/chat). The Privy modal appears for new users.
+  </Step>
+
+  <Step title="Sign in with email or social">
+    Privy supports email (magic link), Google, Twitter, Discord, and other OAuth providers. No seed phrases or browser extensions needed.
+  </Step>
+
+  <Step title="JWT issued">
+    On successful login, Privy issues a JWT (JSON Web Token) containing the user's ID and linked wallet addresses.
+  </Step>
+
+  <Step title="Backend validates JWT">
+    Every request to `/playground/*` endpoints includes the Privy JWT in the `Authorization` header. The backend validates the signature against Privy's public keys.
+  </Step>
+
+  <Step title="Custodial wallet provisioned">
+    If this is the user's first login, the backend provisions an AES-256-GCM encrypted custodial wallet linked to their Privy account. This wallet holds the user's escrow USDC balance.
+  </Step>
+</Steps>
+
+---
+
+## Security Model
+
+| Layer | Implementation |
+|-------|---------------|
+| Auth provider | Privy (SOC 2 compliant) |
+| Token format | JWT with RS256 signature |
+| Validation | Server-side signature verification |
+| Session lifetime | Configurable (default: 7 days) |
+| Key storage | AES-256-GCM encrypted at rest |
+
+<Warning>
+  The custodial wallet private key is encrypted and stored server-side. Users do not have direct access to the raw private key. For self-custody, use the direct x402 API instead.
+</Warning>
+
+---
+
+## Why Privy?
+
+- **Zero friction onboarding** -- Users sign in with email. No MetaMask, no seed phrases, no wallet setup.
+- **Embedded wallets** -- Privy provisions wallets silently. Users interact with DeFi data without knowing they have a wallet.
+- **Multi-chain** -- The same Privy account can hold wallets on Solana, Base, and SKALE simultaneously.
+- **Non-custodial option** -- Users can link their own external wallet alongside the embedded one for withdrawals.
