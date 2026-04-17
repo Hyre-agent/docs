@@ -1,0 +1,103 @@
+---
+title: "Pool Recommendations"
+description: "AI-powered pool recommendation for a token pair with strategy guidance."
+icon: "star"
+---
+
+# POST /lp/pools-recommend
+
+Returns the optimal Meteora DLMM pool for a given token pair, along with AI-generated strategy recommendations including distribution type, risk assessment, and expected APR range.
+
+**Price:** $0.008 per request
+
+**Signal vocabulary:** `add_liquidity` | `hold`
+
+**Sources:** Meteora DLMM
+
+---
+
+## Parameters
+
+<ParamField body="base" type="string" default="SOL">
+  Base token symbol (e.g., `SOL`, `JUP`).
+</ParamField>
+
+<ParamField body="quote" type="string" default="USDC">
+  Quote token symbol (e.g., `USDC`, `USDT`).
+</ParamField>
+
+<ParamField body="strategy" type="string" default="spot">
+  Distribution strategy. Options: `spot`, `curve`, `bidask`.
+</ParamField>
+
+<ParamField body="risk" type="string" default="mid">
+  Risk tolerance. Options: `low`, `mid`, `high`.
+</ParamField>
+
+---
+
+## Example Request
+
+```bash
+curl -X POST https://mpp.hyreagent.fun/lp/pools-recommend \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"base": "SOL", "quote": "USDC", "strategy": "spot", "risk": "mid"}'
+```
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "recommended_pool": {
+      "address": "5BVc...",
+      "name": "SOL-USDC (1bp)",
+      "bin_step": 1,
+      "tvl_usd": 4200000,
+      "apr_pct": 162.5,
+      "volume_24h_usd": 18700000
+    },
+    "strategy": {
+      "distribution": "spot",
+      "suggested_range_pct": 5.0,
+      "risk_level": "mid",
+      "expected_apr_low": 80,
+      "expected_apr_high": 200,
+      "il_risk": "moderate"
+    },
+    "alternatives": [
+      {
+        "address": "7kQw...",
+        "name": "SOL-USDC (5bp)",
+        "bin_step": 5,
+        "tvl_usd": 2100000,
+        "apr_pct": 95.2
+      }
+    ]
+  },
+  "insight": "The 1bp SOL-USDC pool is the top pick — highest volume drives strong fee revenue despite tight bins. Spot distribution with +/-5% range captures 90% of recent price action. IL risk is moderate given SOL's current volatility regime.",
+  "signal": "add_liquidity",
+  "confidence": 0.91,
+  "sources": ["meteora-dlmm"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 892,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Strategy Types
+
+| Strategy | Description | Best For |
+|----------|-------------|----------|
+| `spot` | Uniform distribution around current price | General-purpose, most common |
+| `curve` | Bell curve distribution (concentrated center) | Stable pairs, range-bound markets |
+| `bidask` | One-sided liquidity (buy or sell wall) | Directional conviction, DCA |
+
+<Info>
+  The recommendation considers current volume patterns, fee generation, TVL depth, and historical APR stability when selecting the optimal pool and strategy.
+</Info>
