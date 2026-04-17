@@ -1,0 +1,115 @@
+---
+title: "LP Pools"
+description: "All Meteora DLMM pools with TVL, volume, fees, and APR analytics."
+icon: "water"
+---
+
+# POST /lp/pools
+
+Lists Meteora DLMM liquidity pools with real-time analytics. Supports server-side filtering by token, sorting by APR/volume/TVL, and pagination.
+
+**Price:** $0.001 per request
+
+**Signal vocabulary:** `add_liquidity` | `hold`
+
+**Sources:** Meteora DLMM
+
+---
+
+## Parameters
+
+<ParamField body="sort" type="string" default="apr">
+  Sort order. Options: `apr`, `volume`, `tvl`.
+</ParamField>
+
+<ParamField body="limit" type="integer" default="50">
+  Maximum number of pools to return (max 100).
+</ParamField>
+
+<ParamField body="token" type="string">
+  Filter by token mint address.
+</ParamField>
+
+<ParamField body="base" type="string">
+  Filter by base token symbol (e.g., `SOL`).
+</ParamField>
+
+<ParamField body="quote" type="string">
+  Filter by quote token symbol (e.g., `USDC`).
+</ParamField>
+
+<ParamField body="min_tvl" type="number" default="0">
+  Minimum TVL in USD.
+</ParamField>
+
+---
+
+## Example Request
+
+<CodeGroup>
+```bash curl
+curl -X POST https://mpp.hyreagent.fun/lp/pools \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"sort": "apr", "limit": 5, "min_tvl": 100000}'
+```
+
+```bash GET (legacy)
+curl "https://mpp.hyreagent.fun/lp/meteora/pools?sort=apr&limit=5" \
+  -H "X-PAYMENT: <x402-payment>"
+```
+</CodeGroup>
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "pools": [
+      {
+        "address": "5BVc...",
+        "name": "SOL-USDC",
+        "bin_step": 1,
+        "base_fee_pct": 0.01,
+        "tvl_usd": 4200000,
+        "volume_24h_usd": 18700000,
+        "fees_24h_usd": 18700,
+        "apr_pct": 162.5,
+        "token_x": { "symbol": "SOL", "mint": "So111..." },
+        "token_y": { "symbol": "USDC", "mint": "EPjFW..." }
+      }
+    ],
+    "total_pools": 1,
+    "sort": "apr",
+    "filter": { "min_tvl": 100000 }
+  },
+  "insight": "Top SOL-USDC pool showing 162% APR with $4.2M TVL — strong fee generation from high volume. Fee/TVL ratio of 0.44% daily is sustainable given current market volatility.",
+  "signal": "add_liquidity",
+  "confidence": 0.86,
+  "sources": ["meteora-dlmm"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 456,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## Data Fields
+
+<Expandable title="Pool object fields">
+  | Field | Type | Description |
+  |-------|------|-------------|
+  | `address` | string | Pool contract address |
+  | `name` | string | Pool name (e.g., "SOL-USDC") |
+  | `bin_step` | integer | Bin step size (price granularity) |
+  | `base_fee_pct` | number | Base fee percentage |
+  | `tvl_usd` | number | Total Value Locked in USD |
+  | `volume_24h_usd` | number | 24-hour trading volume in USD |
+  | `fees_24h_usd` | number | 24-hour fees generated in USD |
+  | `apr_pct` | number | Annualized Percentage Rate |
+  | `token_x` | object | Base token (symbol + mint) |
+  | `token_y` | object | Quote token (symbol + mint) |
+</Expandable>
