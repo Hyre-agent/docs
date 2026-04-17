@@ -1,0 +1,117 @@
+---
+title: "/ask"
+description: "Natural language DeFi query — ask anything and the LLM orchestrates data sources to answer."
+icon: "message-bot"
+---
+
+# POST /ask
+
+The meta-endpoint. Ask any DeFi question in plain English and the LLM orchestrates multiple data sources to build a comprehensive answer. The model has access to real-time context including top chain TVLs and top Meteora pool APRs.
+
+**Price:** $0.025 per request
+
+**Sources:** DeFiLlama, Meteora, and contextual data from all segments
+
+---
+
+## Parameters
+
+<ParamField body="query" type="string" required>
+  Natural language DeFi question.
+</ParamField>
+
+---
+
+## Example Request
+
+```bash
+curl -X POST https://mpp.hyreagent.fun/ask \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <x402-payment>" \
+  -d '{"query": "What are the best stablecoin yield opportunities on Solana right now?"}'
+```
+
+---
+
+## Example Response
+
+```json
+{
+  "data": {
+    "query": "What are the best stablecoin yield opportunities on Solana right now?",
+    "context": {
+      "top_chains_by_tvl": [
+        { "name": "Ethereum", "tvl_usd": 62800000000 },
+        { "name": "Solana", "tvl_usd": 12400000000 }
+      ],
+      "top_meteora_pools_by_apr": [
+        { "name": "SOL-USDC", "apr_pct": 162.5, "tvl_usd": 4200000 },
+        { "name": "USDC-USDT", "apr_pct": 24.5, "tvl_usd": 8200000 }
+      ]
+    },
+    "available_endpoints": [
+      "/defi/yields",
+      "/lp/meteora/pools",
+      "/lp/meteora/pools/recommend"
+    ]
+  },
+  "insight": "Best stablecoin yields on Solana: (1) Meteora USDC-USDT at 24.5% APY with $8.2M TVL — pure fee yield, no IL risk. (2) Marinade USDC pools at ~12% with MNDE token incentives. (3) Drift USDC lending at ~8%. For deeper pool analysis, try /lp/meteora/pools?sort=apr with stablecoin filter.",
+  "signal": "high_yield",
+  "confidence": 0.88,
+  "sources": ["defillama", "meteora-dlmm"],
+  "model_used": "deepseek-v3.2",
+  "latency_ms": 1456,
+  "timestamp": "2026-04-17T10:30:00.000Z"
+}
+```
+
+---
+
+## What You Can Ask
+
+<AccordionGroup>
+  <Accordion title="Yield and DeFi">
+    - "What are the highest yield stablecoin pools?"
+    - "Compare TVL growth between Solana and Base this month"
+    - "Is the current yield on Meteora SOL-USDC sustainable?"
+  </Accordion>
+
+  <Accordion title="Token analysis">
+    - "Should I buy this token? [paste mint address]"
+    - "What tokens are smart money accumulating?"
+    - "How risky is this PumpFun launch?"
+  </Accordion>
+
+  <Accordion title="Wallet and trading">
+    - "Is this wallet worth following?"
+    - "Who are the top traders this week?"
+    - "What's the best LP strategy for SOL-USDC with $5000?"
+  </Accordion>
+
+  <Accordion title="Cross-chain">
+    - "Should I bridge my USDC from Solana to Arbitrum for better yield?"
+    - "What's the cheapest way to bridge 10,000 USDC?"
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## How It Differs from Other Endpoints
+
+| Feature | /ask | Specific endpoints |
+|---------|------|-------------------|
+| Input | Natural language question | Structured parameters |
+| Data scope | Cross-endpoint context | Single data source |
+| Best for | Exploration, complex questions | Automation, precise queries |
+| Response time | Slower (~1-2s) | Faster (~300-500ms) |
+| Price | $0.025 (flat) | $0.001 - $0.050 (varies) |
+
+<Info>
+  For automated pipelines, prefer the specific endpoints (e.g., `/defi/yields`, `/lp/pools`). They are faster, cheaper, and return structured data. Use `/ask` for one-off research questions or when you're not sure which endpoint to call.
+</Info>
+
+---
+
+## Endpoint Routing Hint
+
+The response includes an `available_endpoints` field listing the specific HYRE endpoints relevant to your question. Use this to transition from exploratory `/ask` queries to precise endpoint calls.
