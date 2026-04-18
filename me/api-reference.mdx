@@ -1,0 +1,142 @@
+---
+title: API reference
+description: REST endpoints exposed at manifest.me for reading .me state.
+icon: server
+---
+
+`manifest.me` is the canonical source of truth for every `.me`. These endpoints are free and read-only.
+
+For writes (mint, edit, transfer) use the [CLI](/me/cli) or [SDK](/me/sdk) — both sign transactions via the owner's Solana wallet.
+
+## `GET /:name.json`
+
+Fetch an agent's current manifest.
+
+```bash
+curl https://manifest.me/alice.json
+```
+
+**Response** — see [Manifest spec](/me/manifest-spec) for the full shape.
+
+## `GET /:name/owner`
+
+Return the current owner wallet of the `.me` NFT.
+
+```bash
+curl https://manifest.me/alice/owner
+```
+
+```json
+{
+  "name": "alice.me",
+  "owner": "4B9x...kPm3",
+  "assetSigner": "8Mz4...tPw2",
+  "mint": "0x000042",
+  "asOf": "2026-04-19T12:34:56Z"
+}
+```
+
+## `GET /:name/history`
+
+Transfer + edit history for the agent.
+
+```bash
+curl https://manifest.me/alice/history?limit=20
+```
+
+<ParamField query="limit" type="number" default="50">
+  Max events to return. Capped at 200.
+</ParamField>
+
+<ParamField query="cursor" type="string">
+  Pagination cursor from the previous response.
+</ParamField>
+
+```json
+{
+  "events": [
+    {
+      "type": "mint",
+      "actor": "4B9x...kPm3",
+      "at": "2026-02-12T08:14:22Z",
+      "tx": "5gR2...qN8"
+    },
+    {
+      "type": "edit",
+      "field": "description",
+      "at": "2026-03-04T11:02:10Z",
+      "tx": "8Cz1...rT4"
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+## `POST /:name/verify`
+
+Trigger ownership verification for the endpoint referenced by the manifest.
+
+<ParamField body="method" type="'wallet-sign' | 'well-known'" required>
+  Verification method. See [the verification flow](/me/manifest-spec) for specifics.
+</ParamField>
+
+```bash
+curl -X POST https://manifest.me/alice/verify \
+  -H "Content-Type: application/json" \
+  -d '{"method": "wallet-sign"}'
+```
+
+```json
+{
+  "verified": true,
+  "method": "wallet-sign",
+  "challengeTx": "9Hp3...vK7",
+  "at": "2026-04-19T12:40:00Z"
+}
+```
+
+## `GET /.search?q=...`
+
+Full-text search across names, descriptions, and tags.
+
+```bash
+curl "https://manifest.me/.search?q=trading&limit=10"
+```
+
+<ParamField query="q" type="string" required>
+  Search query.
+</ParamField>
+
+<ParamField query="limit" type="number" default="20">
+  Max results. Capped at 100.
+</ParamField>
+
+<ParamField query="category" type="string">
+  Filter by template category (`trenches`, `traders`, `lps`, `defi`, `creative`).
+</ParamField>
+
+## Rate limits
+
+Read endpoints are served from Cloudflare's edge with global caching. No keys required.
+
+If you're building a heavy integration, consider the [SDK](/me/sdk) which batches and caches client-side.
+
+## Errors
+
+All errors follow the standard shape:
+
+```json
+{
+  "error": "NotFound",
+  "message": "alice.me is not claimed",
+  "code": 404
+}
+```
+
+| Code | Error | When |
+| --- | --- | --- |
+| 400 | `InvalidName` | Name fails format validation |
+| 404 | `NotFound` | `.me` is unclaimed or deleted |
+| 410 | `Gone` | `.me` was burned |
+| 429 | `TooManyRequests` | Edge rate limit tripped |
+| 502 | `UpstreamError` | RPC / indexer unavailable |

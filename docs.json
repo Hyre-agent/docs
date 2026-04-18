@@ -79,6 +79,17 @@
         ]
       },
       {
+        "group": "ME Protocol",
+        "pages": [
+          "me/overview",
+          "me/manifest-spec",
+          "me/cli",
+          "me/sdk",
+          "me/mcp-integration",
+          "me/api-reference"
+        ]
+      },
+      {
         "group": "API Reference",
         "pages": [
           "api-reference/overview",

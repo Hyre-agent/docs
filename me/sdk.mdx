@@ -1,0 +1,121 @@
+---
+title: TypeScript SDK
+description: "@me-protocol/sdk — isomorphic client for Node, Deno, Bun, and Cloudflare Workers."
+icon: code
+---
+
+`@me-protocol/sdk` resolves `.me` names, fetches manifests, and handles x402 payment signing for paid endpoints. Works in any modern JS runtime.
+
+## Install
+
+```bash
+npm i @me-protocol/sdk
+```
+
+## Quickstart
+
+```typescript app.ts
+import { Me } from "@me-protocol/sdk";
+
+const me = new Me({
+  rpc: "https://api.mainnet-beta.solana.com",
+  cluster: "mainnet-beta",
+});
+
+// Resolve a .me to its manifest
+const alice = await me.resolve("alice.me");
+console.log(alice.endpoint);
+// → https://agents.me/alice
+
+// Call a paid endpoint — SDK handles x402 signing
+const res = await me.call(alice, "/trenches/new-tokens", {
+  maxAmount: 0.01,
+});
+console.log(res.data);
+
+// Check ownership
+const isOwner = await me.isOwner("alice.me", myWallet.publicKey);
+```
+
+## API
+
+### `new Me(opts)`
+
+<ParamField path="rpc" type="string" required>
+  Solana RPC endpoint.
+</ParamField>
+
+<ParamField path="cluster" type="'mainnet-beta' | 'devnet'">
+  Defaults to `mainnet-beta`.
+</ParamField>
+
+<ParamField path="signer" type="Keypair | WalletAdapter">
+  Optional. Wallet used for x402 payments. Omit for read-only usage.
+</ParamField>
+
+### `me.resolve(name)`
+
+Fetch the manifest for a `.me`.
+
+<ResponseField name="returns" type="Manifest">
+  See [Manifest spec](/me/manifest-spec) for full shape.
+</ResponseField>
+
+### `me.call(manifest, path, opts)`
+
+Execute a paid API call to an agent. The SDK handles x402 challenge + signing automatically.
+
+<ParamField path="manifest" type="Manifest" required>
+  Result of `me.resolve()`.
+</ParamField>
+
+<ParamField path="path" type="string" required>
+  Capability path (e.g. `/trenches/new-tokens`).
+</ParamField>
+
+<ParamField path="opts.maxAmount" type="number">
+  Max USD to pay for this call. Aborts if endpoint quotes higher.
+</ParamField>
+
+<ParamField path="opts.body" type="object">
+  JSON body for POST/PUT/PATCH calls.
+</ParamField>
+
+<ParamField path="opts.paymentNetwork" type="'solana' | 'base' | 'tempo'">
+  Auto-detected from manifest if omitted.
+</ParamField>
+
+### `me.isOwner(name, wallet)`
+
+Returns `true` if the given wallet currently owns the `.me` NFT.
+
+### `me.manifest(name)`
+
+Like `resolve()` but returns the raw manifest JSON without additional lookups.
+
+### `me.assetSigner(name)`
+
+Returns the Asset Signer PDA for a `.me`. The PDA is the wallet address that receives payments and can be used as a signer for on-chain actions by the NFT owner.
+
+## Runtime support
+
+| Runtime | Status |
+| --- | --- |
+| Node 18+ | ✓ Full support |
+| Deno | ✓ Full support |
+| Bun | ✓ Full support |
+| Cloudflare Workers | ✓ Full support (edge runtime) |
+| Browser | ✓ Resolve + call, but payment requires wallet adapter |
+
+## Integration with HYRE
+
+HYRE endpoints are exposed via `manifest.me/hyre.json`. You can call them directly through the SDK:
+
+```typescript
+const hyre = await me.resolve("hyre.me");
+const tokens = await me.call(hyre, "/trenches/new-tokens", {
+  maxAmount: 0.01,
+});
+```
+
+Under the hood the SDK uses the same [x402 protocol](/payment/x402-protocol) HYRE exposes — so balances and sponsored fees work identically.

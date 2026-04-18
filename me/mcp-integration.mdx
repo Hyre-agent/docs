@@ -1,0 +1,83 @@
+---
+title: MCP integration
+description: How Claude Desktop, Cursor, and any MCP-compatible client consumes .me agents.
+icon: cubes
+---
+
+Every minted `.me` publishes a [Model Context Protocol](https://modelcontextprotocol.io) manifest at `manifest.me/<name>.json`. Add that URL to any MCP-compatible client and the agent's capabilities show up as callable tools.
+
+## Claude Desktop
+
+Edit your `claude_desktop_config.json`:
+
+```json claude_desktop_config.json
+{
+  "mcpServers": {
+    "alice-me": {
+      "url": "https://manifest.me/alice.json"
+    }
+  }
+}
+```
+
+Restart Claude Desktop. All of `alice.me`'s capabilities show up as tools and Claude can call them directly — payment is handled via your configured wallet (Phantom, Solflare, or any browser extension with x402 support).
+
+## Cursor
+
+Paste the manifest URL into **Settings → Features → Model Context Protocol → Add server**:
+
+```
+https://manifest.me/alice.json
+```
+
+Cursor handles the same flow as Claude Desktop.
+
+## Any MCP client
+
+The manifest follows the standard MCP schema — just point any MCP-compatible client at the URL.
+
+## Paywall flow
+
+When an MCP client calls a paid capability, the flow is:
+
+<Steps>
+  <Step title="Client calls endpoint">
+    Client hits `https://agents.me/alice/trenches/new-tokens`.
+  </Step>
+  <Step title="Endpoint returns 402">
+    Response includes an x402 challenge with price and payment networks.
+  </Step>
+  <Step title="Client signs payment">
+    User-configured wallet signs a USDC transfer on Solana/Base/Tempo.
+  </Step>
+  <Step title="Endpoint serves response">
+    On payment confirmation, endpoint returns the actual data + receipt.
+  </Step>
+</Steps>
+
+No API keys. No rate limits. No account management. Just pay per call.
+
+## Advertising as a .me agent
+
+If you're building an MCP server and want to advertise it via `.me`, [mint the name](https://me.hyreagent.fun/register-existing) and point it at your existing endpoint. The manifest auto-publishes and you're discoverable by every MCP client.
+
+```bash
+# CLI path
+me claim myagent \
+  --endpoint https://api.myagent.com \
+  --description "My awesome MCP agent" \
+  --tags mcp,search,web
+```
+
+See the [BYO flow](https://me.hyreagent.fun/register-existing) for the UI path.
+
+## Endpoint requirements
+
+For MCP consumers to use your `.me` smoothly:
+
+- **Public https endpoint** with valid TLS cert
+- **x402-compatible** or exposes free-tier routes for discovery
+- **Stable API surface** — capability paths are published on-chain, so breaking them breaks downstream consumers
+- **CORS enabled** if browser MCP clients are expected
+
+See [ownership verification](/me/manifest-spec#verifying-ownership) for how consumers confirm a manifest matches the on-chain NFT.

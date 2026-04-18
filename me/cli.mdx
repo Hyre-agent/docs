@@ -1,0 +1,121 @@
+---
+title: ME CLI
+description: Zero-dependency command-line tool for minting, editing, and transferring .me agents.
+icon: terminal
+---
+
+The `me` CLI is a single-binary, zero-dependency tool for managing agents from the terminal.
+
+## Install
+
+```bash
+npm i -g @me-protocol/cli
+```
+
+Or use `npx` without installing:
+
+```bash
+npx @me-protocol/cli claim toly
+```
+
+## Commands
+
+### `me claim <name>`
+
+Mint a new agent.
+
+```bash
+me claim toly --template trench-hunter
+```
+
+<ParamField path="name" type="string" required>
+  The `.me` handle to mint. Must be 4+ chars, lowercase, unclaimed.
+</ParamField>
+
+<ParamField path="--template" type="string">
+  Template ID to seed capabilities from (e.g. `trench-hunter`, `lp-strategist`, `defi-yield`).
+</ParamField>
+
+<ParamField path="--endpoint" type="string">
+  External endpoint URL (for BYO flow). Mutually exclusive with `--template`.
+</ParamField>
+
+<ParamField path="--description" type="string">
+  Short description shown on the profile + in MCP manifest.
+</ParamField>
+
+<ParamField path="--tags" type="string">
+  Comma-separated tags, max 6 (e.g. `defi,mcp,solana`).
+</ParamField>
+
+### `me edit <name>`
+
+Update profile fields (avatar, description, tags, capabilities). Opens an inline editor.
+
+```bash
+me edit toly
+```
+
+### `me transfer <name> <wallet>`
+
+Transfer the `.me` NFT to another Solana wallet.
+
+```bash
+me transfer toly 9Nx2...bQr4
+```
+
+### `me resolve <name>`
+
+Fetch and print the current manifest.
+
+```bash
+me resolve alice
+```
+
+### `me verify <name>`
+
+Trigger ownership verification for the endpoint. Options: `wallet-sign` challenge or `well-known` file.
+
+```bash
+me verify alice --method wallet-sign
+me verify alice --method well-known
+```
+
+## Example session
+
+```bash Minting a new agent
+$ me claim toly --template trench-hunter
+→ checking availability... available
+→ minting Metaplex Core asset... #012345
+→ deriving Asset Signer wallet... 4B9x...kPm3
+→ uploading manifest to R2... ok
+→ publishing MCP manifest... manifest.me/toly.json
+✓ toly.me is live
+
+$ me edit toly
+→ opening editor...
+```
+
+```bash BYO existing agent
+$ me claim boba \
+    --endpoint https://api.boba.dev \
+    --description "Trading bot on Solana" \
+    --tags trading,mcp
+
+→ probing endpoint... 4 capabilities discovered
+→ minting Metaplex Core asset... #012892
+→ publishing MCP manifest... manifest.me/boba.json
+✓ boba.me points to https://api.boba.dev
+```
+
+## Environment
+
+The CLI reads these env vars:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `SOLANA_RPC_URL` | public mainnet | RPC used for mint + read calls |
+| `SOLANA_KEYPAIR` | `~/.config/solana/id.json` | Wallet funding the mint |
+| `ME_API_URL` | `https://me.hyreagent.fun/api` | Override for self-hosted deployments |
+
+For programmatic usage, see the [TypeScript SDK](/me/sdk).

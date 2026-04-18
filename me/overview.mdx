@@ -1,0 +1,88 @@
+---
+title: ME Protocol
+description: The open identity layer for AI agents on Solana. Claim a name, own it as NFT, publish your endpoints via MCP.
+icon: id-card
+---
+
+ME Protocol turns an agent into a citizen. Every `.me` is a Metaplex Core asset with an Asset Signer wallet, an MCP manifest at `manifest.me/<name>.json`, and pay-per-call rails via x402 and MPP — all on Solana.
+
+Launch a new agent from a template, or bring your own endpoint. Either way, minting costs `$19` one-time and takes under 3 seconds.
+
+## Three pillars
+
+<CardGroup cols={3}>
+  <Card title="NFT identity" icon="fingerprint">
+    Every `.me` is a Metaplex Core asset. Transfer, sell, delegate, bundle — behaves like any other Solana NFT.
+  </Card>
+  <Card title="Asset Signer wallet" icon="wallet">
+    Keyless wallet bound to the NFT. Own the asset, control the wallet. No private key to lose.
+  </Card>
+  <Card title="MCP auto-publish" icon="plug">
+    Every mint publishes a compliant MCP manifest. Claude, Cursor, any agent discovers your service in one click.
+  </Card>
+</CardGroup>
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Claim a name" icon="rocket" href="https://me.hyreagent.fun">
+    Pick a 4+ character `.me`, choose a HYRE-powered template, and mint. Live in under 3 seconds.
+  </Card>
+  <Card title="Bring your own agent" icon="arrow-right-to-bracket" href="https://me.hyreagent.fun/register-existing">
+    Already running an agent? Point a `.me` at your existing endpoint and get MCP discoverability for free.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Pick a name">
+    4+ characters, lowercase, numbers allowed. Pay `$19` in SOL. Reserved names are blocked.
+  </Step>
+  <Step title="Mint on Solana">
+    A Metaplex Core asset lands in your wallet in ~2 seconds. The Asset Signer PDA is derived automatically.
+  </Step>
+  <Step title="Configure">
+    Pick a HYRE-powered template (Trench Hunter, LP Strategist, DeFi Yield, etc.) or paste your own endpoint URL.
+  </Step>
+  <Step title="Publish">
+    Your MCP manifest goes live at `manifest.me/<name>.json`, discoverable by every MCP-compatible client.
+  </Step>
+  <Step title="Earn">
+    Charge per call via x402 or MPP. Sponsor gas for users. Launch a bonding-curve token. Do all three.
+  </Step>
+</Steps>
+
+## Deep dives
+
+<CardGroup cols={2}>
+  <Card title="Manifest spec" icon="file-json" href="/me/manifest-spec">
+    JSON shape for agent manifests, EIP-8004 compatibility, capability pricing.
+  </Card>
+  <Card title="CLI" icon="terminal" href="/me/cli">
+    Zero-dependency `me` command for mint, edit, transfer.
+  </Card>
+  <Card title="TypeScript SDK" icon="code" href="/me/sdk">
+    `@me-protocol/sdk` for Node, Deno, Bun, Cloudflare Workers.
+  </Card>
+  <Card title="MCP integration" icon="cubes" href="/me/mcp-integration">
+    How Claude Desktop, Cursor, and any MCP client consumes `.me` agents.
+  </Card>
+  <Card title="API reference" icon="server" href="/me/api-reference">
+    REST endpoints exposed at `manifest.me`.
+  </Card>
+  <Card title="HYRE integration" icon="link" href="/quickstart">
+    Template-powered endpoints running on HYRE's x402-native rails.
+  </Card>
+</CardGroup>
+
+## Why not SNS or ENS?
+
+SNS and ENS were built for humans. ME is built for agents. The name is the beginning — what's special is the bundle:
+
+- **Keyless Asset Signer** wallet ships with every mint
+- **MCP manifest** auto-published so consumers discover the agent instantly
+- **x402 / MPP** pay-per-call rails baked in — no Stripe required
+- **$19 one-time** — no renewals, no squeeze-play later
+
+See the [comparison table](https://me.hyreagent.fun#vs) on the landing page for the full breakdown.

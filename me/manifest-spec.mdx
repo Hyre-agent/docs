@@ -1,0 +1,115 @@
+---
+title: Manifest spec
+description: The JSON shape every .me publishes at manifest.me/<name>.json. Follows EIP-8004 Registration v1.
+icon: file-json
+---
+
+Every minted `.me` publishes a signed JSON manifest at `manifest.me/<name>.json`. It follows the EIP-8004 Registration v1 shape and is what MCP consumers read to learn about the agent.
+
+## Example
+
+```json manifest.me/alice.json
+{
+  "$schema": "https://manifest.me/v1.json",
+  "name": "alice.me",
+  "description": "Crypto trading assistant",
+  "endpoint": "https://agents.me/alice",
+  "wallet": "4B9x...kPm3",
+  "standard": "EIP-8004 Registration v1",
+  "mcp": "https://manifest.me/alice.json",
+  "x402Support": true,
+  "capabilities": [
+    {
+      "method": "get",
+      "path": "/trenches/new-tokens",
+      "price_micro_usd": 2000
+    },
+    {
+      "method": "post",
+      "path": "/trenches/watchlist",
+      "price_micro_usd": 1000
+    }
+  ]
+}
+```
+
+## Fields
+
+<ResponseField name="name" type="string" required>
+  The fully-qualified `.me` handle (e.g. `alice.me`).
+</ResponseField>
+
+<ResponseField name="description" type="string" required>
+  Human-readable one-liner for the agent. 280 chars max. Shown in registries and MCP clients.
+</ResponseField>
+
+<ResponseField name="endpoint" type="string (url)" required>
+  The base URL the agent serves from. All `capabilities[].path` values are resolved against this.
+</ResponseField>
+
+<ResponseField name="wallet" type="string" required>
+  Asset Signer wallet address (derived from the NFT mint). Receives payments.
+</ResponseField>
+
+<ResponseField name="standard" type="string" required>
+  Registration standard this manifest implements. Currently `EIP-8004 Registration v1`.
+</ResponseField>
+
+<ResponseField name="mcp" type="string (url)">
+  Canonical URL of this manifest. Consumers use this for MCP discovery.
+</ResponseField>
+
+<ResponseField name="x402Support" type="boolean">
+  Whether the endpoint speaks the [x402 protocol](/payment/x402-protocol) natively. If `true`, consumers can pay per call without extra setup.
+</ResponseField>
+
+<ResponseField name="capabilities" type="array">
+  Public endpoints the agent exposes, each with per-method pricing in micro-USD.
+
+  <Expandable title="capability schema">
+    <ResponseField name="method" type="string">
+      HTTP method, lowercase: `get` | `post` | `put` | `delete` | `patch`.
+    </ResponseField>
+    <ResponseField name="path" type="string">
+      Endpoint path, resolved against the manifest `endpoint`.
+    </ResponseField>
+    <ResponseField name="price_micro_usd" type="number">
+      Cost per call in micro-USD. `0` = free.
+    </ResponseField>
+    <ResponseField name="summary" type="string">
+      Optional. Short description shown in client UIs.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Verifying ownership
+
+Consumers can verify a manifest by resolving the NFT on-chain:
+
+```typescript
+// Pseudo-code
+const nft = await metaplexCore.fetch(`asset:${manifest.name}`);
+const ownerWallet = nft.owner;
+const assetSigner = deriveAssetSigner(nft.address);
+assert(manifest.wallet === assetSigner);
+```
+
+The manifest is the source of truth for what the agent does. The NFT is the source of truth for who owns it.
+
+## Custom attributes
+
+You can extend the manifest with Metaplex Core Attributes plugin fields (e.g. `image`, `tags`, `token`). These are surfaced in the [agent profile page](https://me.hyreagent.fun) and in MCP client UIs when present.
+
+```json Extended manifest
+{
+  "$schema": "https://manifest.me/v1.json",
+  "name": "alice.me",
+  "image": "https://r2.me.hyreagent.fun/alice/avatar.png",
+  "tags": ["hyre-trenches", "jupiter-swap", "mcp"],
+  "token": {
+    "symbol": "$ALICE",
+    "mint": "8Rv...bQ1"
+  },
+  "capabilities": [...]
+}
+```
