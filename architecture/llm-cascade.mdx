@@ -1,34 +1,87 @@
 ---
 title: "LLM Cascade"
-description: "Multi-model fallback system that ensures every request gets an AI-enriched response."
+description: "Tiered multi-model fallback that ensures every request gets an AI-enriched response."
 icon: "layer-group"
 ---
 
 # LLM Cascade
 
-HYRE uses a multi-model cascade to generate AI insights. Models are tried in priority order. If one fails (timeout, rate limit, content policy), the next model is tried automatically. If all models fail, raw data is returned with `insight: null` and HTTP 206 status.
+HYRE enriches every endpoint through a tiered multi-model cascade. Each endpoint
+picks a **tier** based on what its output is — a cheap data listing, a heavier
+analysis, or a genuine analytical decision. Within a tier, models are tried in
+priority order: if one fails (timeout, rate limit, content policy), the next is
+tried automatically. If all models fail, raw data is returned with
+`insight: null` and HTTP 206 status.
+
+---
+
+## Tiers
+
+| Tier | First model | Typical latency | Used for |
+|------|-------------|-----------------|----------|
+| `fast` | Gemini 2.5 Flash-Lite | ~1–1.5s | High-volume listings & formatting (new tokens, pools, prices, TVL) |
+| `quality` | Gemini 2.5 Flash | ~1.5–2.5s | Heavier analysis (Smart Money / Nansen) |
+| `reasoning` | OpenServ SERV | ~3.5–5s | Analytical **decisions** — verdicts, recommendations, cross-chain math |
+
+Every tier shares the same fallback chain, so a failure in the primary model
+degrades gracefully to the next provider rather than failing the request.
+
+---
+
+## Reasoning Tier — OpenServ SERV
+
+Decision endpoints use [OpenServ SERV Reasoning](https://docs.openserv.ai/serv-reasoning/introduction)
+as their primary model. SERV is an OpenAI-compatible gateway that runs a bounded
+reasoning pass (BRAID) over an underlying model before answering, which improves
+multi-factor judgments and arithmetic-heavy comparisons.
+
+| Setting | Value |
+|---------|-------|
+| Endpoint | `https://inference-api.openserv.ai/v1/chat/completions` |
+| Model | `gemini-flash-latest` |
+| `reasoning_effort` | `low` |
+| Timeout | 12s |
+| `max_tokens` | 2500 |
+
+<Info>
+  Reasoning tokens share the completion budget, so `max_tokens` is raised to 2500
+  on this tier (vs 800 on `fast`/`quality`) to avoid truncating the answer. The
+  12s timeout gives the reasoning pass headroom above the 8s used elsewhere.
+</Info>
+
+**Endpoints on the reasoning tier:**
+
+| Endpoint | Decision |
+|----------|----------|
+| `POST /ask` | Natural-language DeFi reasoning |
+| `GET /trenches/token/{mint}/verdict` | `snipe` / `watch` / `avoid` |
+| `GET /debridge/quote` | `execute` / `wait` / `avoid` |
+| `GET /debridge/yield-migrate` | `migrate` / `stay` / `wait` (break-even math) |
+| `GET /lp/meteora/pools/recommend` | Pool recommendation |
+| `GET /lp/meteora/pools/strategy` | LP strategy |
+| `GET /lp/positions/{id}/rebalance` | `rebalance` / `hold` |
+
+If `SERV_API_KEY` is not configured, these endpoints fall back to the Gemini
+cascade automatically — no request fails.
 
 ---
 
 ## Cascade Order
 
-### Primary: OpenRouter
+The fallback chain, in order, after the tier's primary model:
 
-| Priority | Model | Timeout | Notes |
-|----------|-------|---------|-------|
-| 1 | DeepSeek V3.2 | 10s | Primary. Fast, high-quality JSON output. |
-| 2 | DeepSeek V3 (Chat) | 8s | Fallback. Slightly older model version. |
-| 3 | GLM 4.5 Air (Free) | 8s | Free tier. Good for simple enrichment. |
-| 4 | Claude 3.5 Haiku | 8s | Premium fallback. Highest quality reasoning. |
+| Priority | Provider / Model | Timeout | Notes |
+|----------|------------------|---------|-------|
+| 1 | **SERV** (reasoning tier only) | 12s | Bounded reasoning over Gemini Flash. |
+| 2 | Gemini 2.5 Flash-Lite | 8s | Primary for `fast`. Cheap + fast JSON. |
+| 3 | Gemini 2.5 Flash | 8s | Primary for `quality`. Stronger analysis. |
+| 4 | OpenRouter cascade | 8–10s | Cross-provider resilience (DeepSeek → GLM → Claude Haiku). |
+| 5 | Venice AI | 8–10s | Last-resort fallback (DeepSeek V3.2, GLM Flash). |
 
-### Secondary: Venice AI
-
-If all OpenRouter models fail, HYRE falls back to Venice AI:
-
-| Priority | Model | Timeout | Notes |
-|----------|-------|---------|-------|
-| 5 | Venice DeepSeek V3.2 | 10s | Same model, different provider. |
-| 6 | Venice GLM 4.7 Flash | 8s | Fast, lightweight. |
+<Note>
+  `fast` starts at Flash-Lite then escalates to Flash; `quality` and `reasoning`
+  fall back through Flash first. All tiers end with OpenRouter then Venice.
+</Note>
 
 ### Chat Agent (Playground)
 
@@ -44,7 +97,7 @@ The Playground chat agent uses a separate model:
 
 | Failure | Behavior |
 |---------|----------|
-| Timeout (>8-10s) | Abort and try next model |
+| Timeout (>8–12s) | Abort and try next model |
 | HTTP 429 (rate limit) | Skip and try next model |
 | HTTP 5xx (server error) | Skip and try next model |
 | Content policy block | Skip and try next model |
@@ -52,7 +105,9 @@ The Playground chat agent uses a separate model:
 | All models fail | Return raw data, `insight: null`, HTTP 206 |
 
 <Info>
-  HTTP 206 (Partial Content) indicates the data was fetched successfully but the LLM enrichment failed. The `data` field contains the full upstream data. The `signal` field will be absent or set to a default value.
+  HTTP 206 (Partial Content) indicates the data was fetched successfully but the
+  LLM enrichment failed. The `data` field contains the full upstream data. The
+  `signal` field falls back to `neutral` with `confidence: 0`.
 </Info>
 
 ---
@@ -69,9 +124,13 @@ Every LLM call uses these parameters:
 }
 ```
 
-- **Low temperature (0.3)** -- Prioritizes consistent, factual output over creative variation.
-- **JSON mode** -- Forces the model to return valid JSON, parsed into the response envelope.
-- **800 token limit** -- Keeps insights concise (1-2 sentences) and response times fast.
+- **Low temperature (0.3)** — Prioritizes consistent, factual output over creative variation.
+- **JSON mode** — Forces the model to return valid JSON, parsed into the response envelope.
+- **800 token limit** — Keeps insights concise (1–2 sentences) and response times fast.
+
+On the `reasoning` tier, `max_tokens` is raised to **2500** and
+`reasoning_effort: "low"` is added, since reasoning tokens share the completion
+budget.
 
 ---
 
@@ -102,7 +161,9 @@ The LLM returns JSON matching this structure:
 }
 ```
 
-The `enrich()` function merges this with the raw data:
+The `enrich()` function merges this with the raw data. `model_used` reflects the
+model that actually answered — e.g. `serv/google/gemini-3.5-flash` on the
+reasoning tier, or `gemini-2.5-flash-lite` on the fast tier:
 
 ```json
 {
@@ -111,8 +172,8 @@ The `enrich()` function merges this with the raw data:
   "signal": "high_yield",
   "confidence": 0.87,
   "sources": ["defillama"],
-  "model_used": "deepseek-v3.2",
+  "model_used": "gemini-2.5-flash-lite",
   "latency_ms": 342,
-  "timestamp": "2026-04-17T10:30:00.000Z"
+  "timestamp": "2026-06-10T10:30:00.000Z"
 }
 ```
