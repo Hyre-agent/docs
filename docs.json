@@ -79,6 +79,12 @@
         ]
       },
       {
+        "group": "Benchmarks",
+        "pages": [
+          "benchmarks/serv-reasoning"
+        ]
+      },
+      {
         "group": "ME Protocol",
         "pages": [
           "me/overview",
